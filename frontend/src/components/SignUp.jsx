@@ -38,6 +38,7 @@ const SignUp = () => {
         </div>
         <div className="sign-up-container">
             <div className="sign-up">
+            {message && <p className="welcome-message">{message}</p>}
                 <h1>Create An Account</h1>
                 <form onSubmit={signup}>
                     <label> First Name <input type="text" name="firstName" onChange={handleChange}/> </label>
@@ -46,11 +47,8 @@ const SignUp = () => {
                     <label> Password <input type="password" name="password" onChange={handleChange}/></label>
                     <button type="submit" className="signup-btn">Create Account</button>
                 </form>
-                <p className="login-link"> Already have an account? <Link to="/signin">Log In</Link>
-                </p>
-                <div className="divider">or</div>
-                <button className="google-btn"> Sign up with Google</button>
-                {message && <p className="welcome-message">{message}</p>}
+                <p className="login-link"> Already have an account? <Link to="/signin">Log In</Link></p>
+
             </div>
         </div>
     </div>
