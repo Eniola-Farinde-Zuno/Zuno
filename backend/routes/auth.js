@@ -3,11 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
+const { validateUser } = require('../routes/validation')
 
 
 const router = express.Router();
 
-router.post('/signup', async (req, res) => {
+router.post('/signup', validateUser, async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -29,10 +30,10 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!user) return res.status(400).json({ msg: "No User Found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ msg: "Incorrect Password" });
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 

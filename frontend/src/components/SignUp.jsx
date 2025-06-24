@@ -24,8 +24,6 @@ const SignUp = () => {
         } else {
             setMessage(data.message || "Sign-up failed.");
         }
-
-
     }
 
   return (
