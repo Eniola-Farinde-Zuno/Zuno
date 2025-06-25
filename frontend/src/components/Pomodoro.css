@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  width: 100%;
+  min-width: 1200px;
 }
 .pomodoro-header {
   text-align: center;
