@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import logo from '../assets/zuno-logo.png';
 import '../components/SignUp.css'
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
     const [form , setForm] = useState({ firstName: '', lastName: '', email: '', password: ''});
     const [message, setMessage] = useState('')
+    const navigate = useNavigate();
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
-      };
+    };
+
     const signup = async (e) => {
         e.preventDefault();
         const response = await fetch("http://localhost:5000/api/auth/signup", {
@@ -20,9 +22,10 @@ const SignUp = () => {
         });
         const data = await response.json();
         if (response.ok) {
-            setMessage(data.message || `Welcome, ${data.user.firstName}!`);
+            setMessage(`Welcome, ${data.user.firstName}!`);
+            navigate("/signin");
         } else {
-            setMessage(data.message || "Sign-up failed.");
+            setMessage(data.message);
         }
     }
 
@@ -38,7 +41,7 @@ const SignUp = () => {
         </div>
         <div className="sign-up-container">
             <div className="sign-up">
-            {message && <p className="welcome-message">{message}</p>}
+            {message && <p className="welcome">{message}</p>}
                 <h1>Create An Account</h1>
                 <form onSubmit={signup}>
                     <label> First Name <input type="text" name="firstName" onChange={handleChange}/> </label>
