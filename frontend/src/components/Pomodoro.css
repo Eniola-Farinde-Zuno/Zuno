@@ -1,1 +1,24 @@
+.pomodoro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+.pomodoro-header {
+  text-align: center;
+}
+.pomodoro-content {
+  display: flex;
+  gap: 5rem;
+  margin-top: 3rem;
+}
 
+.focus-timer h2, .break-timer h2{
+    text-align: center;
+}
+
+.btn {
+    margin-top: 2rem;
+}

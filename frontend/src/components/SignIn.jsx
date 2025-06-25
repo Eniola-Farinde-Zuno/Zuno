@@ -29,11 +29,12 @@ const SignIn = () => {
         });
         const data = await response.json();
         if (response.ok) {
-            setMessage(data.message || `Welcome Back, ${data.user.firstName}!`);
+            setMessage(`Welcome Back, ${data.user.firstName}!`);
             setSuccess(true);
             localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
             setForm({ email: '', password: '' });
-            navigate('/sidebar');
+            navigate('/pomodoro');
 
         } else {
             setMessage(data.message);

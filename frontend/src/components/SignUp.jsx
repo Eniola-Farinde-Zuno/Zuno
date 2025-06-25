@@ -22,7 +22,7 @@ const SignUp = () => {
         });
         const data = await response.json();
         if (response.ok) {
-            setMessage(data.message || `Welcome, ${data.user.firstName}!`);
+            setMessage(`Welcome, ${data.user.firstName}!`);
             navigate("/signin");
         } else {
             setMessage(data.message);
@@ -41,7 +41,7 @@ const SignUp = () => {
         </div>
         <div className="sign-up-container">
             <div className="sign-up">
-            {message && <p className="welcome-message">{message}</p>}
+            {message && <p className="welcome">{message}</p>}
                 <h1>Create An Account</h1>
                 <form onSubmit={signup}>
                     <label> First Name <input type="text" name="firstName" onChange={handleChange}/> </label>
