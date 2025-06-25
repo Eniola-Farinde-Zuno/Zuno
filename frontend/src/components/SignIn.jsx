@@ -33,10 +33,10 @@ const SignIn = () => {
             setSuccess(true);
             localStorage.setItem('token', data.token);
             setForm({ email: '', password: '' });
-            navigate('/');
+            navigate('/pomodoro');
 
         } else {
-            setMessage(data.message || "Log-In failed.");
+            setMessage(data.message);
         }
     }
 
