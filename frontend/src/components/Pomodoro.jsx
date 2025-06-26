@@ -1,6 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
 import './Pomodoro.css';
 import Sidebar from './Sidebar';
+import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 
 const Pomodoro = () => {
@@ -8,14 +10,35 @@ const Pomodoro = () => {
     const userId = user.id;
     const [greeting, setGreeting] = useState('');
     const [firstName, setFirstName] = useState('');
-    const [focusTime, setFocusTime] = useState(25 * 60);
-    const [breakTime, setBreakTime] = useState(5 * 60);
-    const [isFocus, setIsFocus] = useState(false);
-    const [isBreak, setIsBreak] = useState(false);
-    const [mode, setMode] = useState('focus');
+    const [focusTime, setFocusTime] = useState(() => {
+        const savedTime = localStorage.getItem('focusTime');
+        return savedTime ? parseInt(savedTime, 10) : 25 * 60;
+    });
+    const [breakTime, setBreakTime] = useState(() => {
+        const savedTime = localStorage.getItem('breakTime');
+        return savedTime ? parseInt(savedTime, 10) : 5 * 60;
+    });
+    const [isFocus, setIsFocus] = useState(() => {
+        const savedState = localStorage.getItem('isFocus');
+        return savedState === 'true';
+    });
+    const [isBreak, setIsBreak] = useState(() => {
+        const savedState = localStorage.getItem('isBreak');
+        return savedState === 'true';
+    });
+    const [mode, setMode] = useState(() => {
+        const savedMode = localStorage.getItem('mode');
+        return savedMode || 'focus';
+    });
     const [cycles, setCycles] = useState(0);
     const focusInterval = useRef(null);
     const breakInterval = useRef(null);
+
+    useEffect(() => { localStorage.setItem('focusTime', focusTime.toString()); }, [focusTime]);
+    useEffect(() => { localStorage.setItem('breakTime', breakTime.toString()); }, [breakTime]);
+    useEffect(() => { localStorage.setItem('isFocus', isFocus.toString()); }, [isFocus]);
+    useEffect(() => { localStorage.setItem('isBreak', isBreak.toString()); }, [isBreak]);
+    useEffect(() => { localStorage.setItem('mode', mode); }, [mode]);
 
     useEffect(() => {
         const updateGreeting = () => {
@@ -30,7 +53,6 @@ const Pomodoro = () => {
           }
           setGreeting(newGreeting);
         };
-
         updateGreeting();
         const interval = setInterval(updateGreeting, 60 * 60 * 1000);
         return () => clearInterval(interval);
@@ -52,9 +74,6 @@ const Pomodoro = () => {
                     if (prevTime <= 1) {
                         clearInterval(focusInterval.current);
                         setIsFocus(false);
-                        setIsBreak(true);
-                        setMode('break');
-                        setBreakTime(5 * 60);
                         setCycles(cycles + 1);
                         return 0;
                     }
@@ -72,9 +91,6 @@ const Pomodoro = () => {
                     if (prevTime <= 1) {
                         clearInterval(breakInterval.current);
                         setIsBreak(false);
-                        setIsFocus(true);
-                        setMode('focus');
-                        setFocusTime(25 * 60);
                         return 0;
                     }
                     return prevTime - 1;
@@ -111,7 +127,6 @@ const Pomodoro = () => {
             setBreakTime(5 * 60);
         }
     }
-
     return (
         <div className='pomodoro'>
             <Sidebar />
@@ -121,8 +136,10 @@ const Pomodoro = () => {
             </div>
             <div className='pomodoro-content'>
                 <div className='focus-timer'>
-                    <h2>Focus</h2>
-                    <h2>{formatTime(focusTime)}</h2>
+                    <h1>Focus</h1>
+                    <h2><CircularProgressbar value={focusTime} text={formatTime(focusTime)} maxValue={1500} strokeWidth={2} styles={buildStyles({
+                        textColor: '#000000', pathColor: '#000000', strokeLinecap: 'round',
+                    })}/></h2>
                     <button className={`btn ${mode === 'focus' && isFocus}`} onClick={() => {
                         if (mode === 'focus' && isFocus) {
                             handlePause();
@@ -132,8 +149,10 @@ const Pomodoro = () => {
                     }}> {mode === 'focus' && isFocus ? "Pause Focus" : "Start Focus"} </button>
                 </div>
                 <div className='break-timer'>
-                    <h2>Break</h2>
-                    <h2>{formatTime(breakTime)}</h2>
+                    <h1>Break</h1>
+                    <h2><CircularProgressbar value={breakTime} text={formatTime(breakTime)} maxValue={300} strokeWidth={2} styles={buildStyles({
+                        textColor: '#000000', pathColor: '#000000',
+                    })}/></h2>
                     <button className={`btn ${mode === 'break' && isBreak}`} onClick={() => {
                         if (mode === 'break' && isBreak) {
                             handlePause();
@@ -143,8 +162,8 @@ const Pomodoro = () => {
                     }}> {mode === 'break' && isBreak ? "Pause Break" : "Take a Break"} </button>
                 </div>
             </div>
-            <p>Pomodoros Completed: {cycles}</p>
-            <button className='btn' onClick={handleReset}>Reset</button>
+            <p className='cycle'>Pomodoros Completed: {cycles}</p>
+            <button className='reset-btn' onClick={handleReset}>Reset</button>
         </div>
     );
 }
