@@ -10,14 +10,35 @@ const Pomodoro = () => {
     const userId = user.id;
     const [greeting, setGreeting] = useState('');
     const [firstName, setFirstName] = useState('');
-    const [focusTime, setFocusTime] = useState(25 * 60);
-    const [breakTime, setBreakTime] = useState(5 * 60);
-    const [isFocus, setIsFocus] = useState(false);
-    const [isBreak, setIsBreak] = useState(false);
-    const [mode, setMode] = useState('focus');
+    const [focusTime, setFocusTime] = useState(() => {
+        const savedTime = localStorage.getItem('focusTime');
+        return savedTime ? parseInt(savedTime, 10) : 25 * 60;
+    });
+    const [breakTime, setBreakTime] = useState(() => {
+        const savedTime = localStorage.getItem('breakTime');
+        return savedTime ? parseInt(savedTime, 10) : 5 * 60;
+    });
+    const [isFocus, setIsFocus] = useState(() => {
+        const savedState = localStorage.getItem('isFocus');
+        return savedState === 'true';
+    });
+    const [isBreak, setIsBreak] = useState(() => {
+        const savedState = localStorage.getItem('isBreak');
+        return savedState === 'true';
+    });
+    const [mode, setMode] = useState(() => {
+        const savedMode = localStorage.getItem('mode');
+        return savedMode || 'focus';
+    });
     const [cycles, setCycles] = useState(0);
     const focusInterval = useRef(null);
     const breakInterval = useRef(null);
+
+    useEffect(() => { localStorage.setItem('focusTime', focusTime.toString()); }, [focusTime]);
+    useEffect(() => { localStorage.setItem('breakTime', breakTime.toString()); }, [breakTime]);
+    useEffect(() => { localStorage.setItem('isFocus', isFocus.toString()); }, [isFocus]);
+    useEffect(() => { localStorage.setItem('isBreak', isBreak.toString()); }, [isBreak]);
+    useEffect(() => { localStorage.setItem('mode', mode); }, [mode]);
 
     useEffect(() => {
         const updateGreeting = () => {
@@ -32,7 +53,6 @@ const Pomodoro = () => {
           }
           setGreeting(newGreeting);
         };
-
         updateGreeting();
         const interval = setInterval(updateGreeting, 60 * 60 * 1000);
         return () => clearInterval(interval);
@@ -54,9 +74,6 @@ const Pomodoro = () => {
                     if (prevTime <= 1) {
                         clearInterval(focusInterval.current);
                         setIsFocus(false);
-                        setIsBreak(true);
-                        setMode('break');
-                        setBreakTime(5 * 60);
                         setCycles(cycles + 1);
                         return 0;
                     }
@@ -74,9 +91,6 @@ const Pomodoro = () => {
                     if (prevTime <= 1) {
                         clearInterval(breakInterval.current);
                         setIsBreak(false);
-                        setIsFocus(true);
-                        setMode('focus');
-                        setFocusTime(25 * 60);
                         return 0;
                     }
                     return prevTime - 1;
@@ -113,7 +127,6 @@ const Pomodoro = () => {
             setBreakTime(5 * 60);
         }
     }
-
     return (
         <div className='pomodoro'>
             <Sidebar />
@@ -151,9 +164,6 @@ const Pomodoro = () => {
             </div>
             <p className='cycle'>Pomodoros Completed: {cycles}</p>
             <button className='reset-btn' onClick={handleReset}>Reset</button>
-            <div className='progress-bar'>
-
-            </div>
         </div>
     );
 }
