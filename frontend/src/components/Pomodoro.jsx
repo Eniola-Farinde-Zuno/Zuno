@@ -1,6 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
 import './Pomodoro.css';
 import Sidebar from './Sidebar';
+import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 
 const Pomodoro = () => {
@@ -121,8 +123,10 @@ const Pomodoro = () => {
             </div>
             <div className='pomodoro-content'>
                 <div className='focus-timer'>
-                    <h2>Focus</h2>
-                    <h2>{formatTime(focusTime)}</h2>
+                    <h1>Focus</h1>
+                    <h2><CircularProgressbar value={focusTime} text={formatTime(focusTime)} maxValue={1500} strokeWidth={2} styles={buildStyles({
+                        textColor: '#000000', pathColor: '#000000', strokeLinecap: 'round',
+                    })}/></h2>
                     <button className={`btn ${mode === 'focus' && isFocus}`} onClick={() => {
                         if (mode === 'focus' && isFocus) {
                             handlePause();
@@ -132,8 +136,10 @@ const Pomodoro = () => {
                     }}> {mode === 'focus' && isFocus ? "Pause Focus" : "Start Focus"} </button>
                 </div>
                 <div className='break-timer'>
-                    <h2>Break</h2>
-                    <h2>{formatTime(breakTime)}</h2>
+                    <h1>Break</h1>
+                    <h2><CircularProgressbar value={breakTime} text={formatTime(breakTime)} maxValue={300} strokeWidth={2} styles={buildStyles({
+                        textColor: '#000000', pathColor: '#000000',
+                    })}/></h2>
                     <button className={`btn ${mode === 'break' && isBreak}`} onClick={() => {
                         if (mode === 'break' && isBreak) {
                             handlePause();
@@ -143,8 +149,11 @@ const Pomodoro = () => {
                     }}> {mode === 'break' && isBreak ? "Pause Break" : "Take a Break"} </button>
                 </div>
             </div>
-            <p>Pomodoros Completed: {cycles}</p>
-            <button className='btn' onClick={handleReset}>Reset</button>
+            <p className='cycle'>Pomodoros Completed: {cycles}</p>
+            <button className='reset-btn' onClick={handleReset}>Reset</button>
+            <div className='progress-bar'>
+
+            </div>
         </div>
     );
 }
