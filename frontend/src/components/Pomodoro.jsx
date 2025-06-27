@@ -106,11 +106,17 @@ const Pomodoro = () => {
         return `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
     const handleFocus = () => {
+        if (focusTime === 0) {
+            setFocusTime(25 * 60);
+        }
         setIsFocus(true);
         setIsBreak(false);
         setMode('focus');
     }
     const handleBreak = () => {
+        if (breakTime === 0) {
+            setBreakTime(5 * 60);
+        }
         setIsBreak(true);
         setIsFocus(false);
         setMode('break');
@@ -127,6 +133,24 @@ const Pomodoro = () => {
             setBreakTime(5 * 60);
         }
     }
+    const focusButtonDisplay = () => {
+        if (isFocus) {
+            return "Pause Focus";
+        } if (focusTime < 25 * 60) {
+            return "Continue Focus";
+        }
+        return "Start Focus";
+    }
+    const breakButtonDisplay = () => {
+        if (isBreak) {
+            return "Pause Break";
+        }
+        if (breakTime < 5 * 60) {
+            return "Continue Break";
+        }
+        return "Take a Break";
+    }
+
     return (
         <div className='pomodoro'>
             <Sidebar />
@@ -146,7 +170,7 @@ const Pomodoro = () => {
                         } else {
                             handleFocus();
                         }
-                    }}> {mode === 'focus' && isFocus ? "Pause Focus" : "Start Focus"} </button>
+                    }}> {focusButtonDisplay()} </button>
                 </div>
                 <div className='break-timer'>
                     <h1>Break</h1>
@@ -159,7 +183,7 @@ const Pomodoro = () => {
                         } else {
                             handleBreak();
                         }
-                    }}> {mode === 'break' && isBreak ? "Pause Break" : "Take a Break"} </button>
+                    }}> {breakButtonDisplay()} </button>
                 </div>
             </div>
             <p className='cycle'>Pomodoros Completed: {cycles}</p>
