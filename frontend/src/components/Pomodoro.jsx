@@ -1,28 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import './Pomodoro.css';
 import Sidebar from './Sidebar';
 import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay } from '@fortawesome/free-solid-svg-icons';
-import { faPause } from '@fortawesome/free-solid-svg-icons';
 
 
 const Pomodoro = () => {
-    const urlPrefix = 'http://localhost:5000/api';
-    const secs_in_min = 60;
-    const textColor = '#000000';
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user.id;
     const [greeting, setGreeting] = useState('');
     const [firstName, setFirstName] = useState('');
     const [focusTime, setFocusTime] = useState(() => {
         const savedTime = localStorage.getItem('focusTime');
-        return savedTime ? parseInt(savedTime, 10) : 25 * secs_in_min;
+        return savedTime ? parseInt(savedTime, 10) : 25 * 60;
     });
     const [breakTime, setBreakTime] = useState(() => {
         const savedTime = localStorage.getItem('breakTime');
-        return savedTime ? parseInt(savedTime, 10) : 5 * secs_in_min;
+        return savedTime ? parseInt(savedTime, 10) : 5 * 60;
     });
     const [isFocus, setIsFocus] = useState(() => {
         const savedState = localStorage.getItem('isFocus');
@@ -48,25 +42,25 @@ const Pomodoro = () => {
 
     useEffect(() => {
         const updateGreeting = () => {
-            const currentHour = new Date().getHours();
-            let newGreeting = '';
-            if (currentHour < 12) {
-                newGreeting = 'Good Morning';
-            } else if (currentHour >= 12 && currentHour < 18) {
-                newGreeting = 'Good Afternoon';
-            } else {
-                newGreeting = 'Good Evening';
-            }
-            setGreeting(newGreeting);
+          const currentHour = new Date().getHours();
+          let newGreeting = '';
+          if (currentHour < 12) {
+            newGreeting = 'Good Morning';
+          } else if (currentHour >= 12 && currentHour < 18) {
+            newGreeting = 'Good Afternoon';
+          } else {
+            newGreeting = 'Good Evening';
+          }
+          setGreeting(newGreeting);
         };
         updateGreeting();
         const interval = setInterval(updateGreeting, 60 * 60 * 1000);
         return () => clearInterval(interval);
-    }, []);
+      }, []);
 
     useEffect(() => {
         async function userFirstName() {
-            const response = await fetch(`${urlPrefix}/user/${userId}`);
+            const response = await fetch(`http://localhost:5000/api/user/${userId}`);
             const data = await response.json();
             setFirstName(data.firstName);
         }
@@ -113,7 +107,7 @@ const Pomodoro = () => {
     }
     const handleFocus = () => {
         if (focusTime === 0) {
-            setFocusTime(25 * secs_in_min);
+            setFocusTime(25 * 60);
         }
         setIsFocus(true);
         setIsBreak(false);
@@ -121,7 +115,7 @@ const Pomodoro = () => {
     }
     const handleBreak = () => {
         if (breakTime === 0) {
-            setBreakTime(5 * secs_in_min);
+            setBreakTime(5 * 60);
         }
         setIsBreak(true);
         setIsFocus(false);
@@ -134,22 +128,27 @@ const Pomodoro = () => {
     const handleReset = () => {
         handlePause();
         if (mode === 'focus') {
-            setFocusTime(25 * secs_in_min);
+            setFocusTime(25 * 60);
         } else {
-            setBreakTime(5 * secs_in_min);
+            setBreakTime(5 * 60);
         }
     }
-    const addfiveFocus = () => {
-        setFocusTime(focusTime + 5 * secs_in_min);
+    const focusButtonDisplay = () => {
+        if (isFocus) {
+            return "Pause Focus";
+        } if (focusTime < 25 * 60) {
+            return "Continue Focus";
+        }
+        return "Start Focus";
     }
-    const minusFiveFocus = () => {
-        setFocusTime(focusTime - 5 * secs_in_min);
-    }
-    const addfiveBreak = () => {
-        setBreakTime(breakTime + 5 * secs_in_min);
-    }
-    const minusFiveBreak = () => {
-        setBreakTime(breakTime - 5 * secs_in_min);
+    const breakButtonDisplay = () => {
+        if (isBreak) {
+            return "Pause Break";
+        }
+        if (breakTime < 5 * 60) {
+            return "Continue Break";
+        }
+        return "Take a Break";
     }
 
     return (
@@ -162,37 +161,29 @@ const Pomodoro = () => {
             <div className='pomodoro-content'>
                 <div className='focus-timer'>
                     <h1>Focus</h1>
-                    <h2><CircularProgressbar className='progress-bar' value={focusTime} text={formatTime(focusTime)} maxValue={1500} strokeWidth={2} styles={buildStyles({
-                        textColor: textColor, pathColor: textColor,
-                    })} /></h2>
-                    <div className='focus-btns'>
-                        <button className='btn' onClick={minusFiveFocus}>-5 : 00</button>
-                        <button className={`btn ${mode === 'focus' && isFocus}`} onClick={() => {
-                            if (mode === 'focus' && isFocus) {
-                                handlePause();
-                            } else {
-                                handleFocus();
-                            }
-                        }}> {mode === 'focus' && isFocus ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />} </button>
-                        <button className='btn' onClick={addfiveFocus}>+5 : 00</button>
-                    </div>
+                    <h2><CircularProgressbar value={focusTime} text={formatTime(focusTime)} maxValue={1500} strokeWidth={2} styles={buildStyles({
+                        textColor: '#000000', pathColor: '#000000', strokeLinecap: 'round',
+                    })}/></h2>
+                    <button className={`btn ${mode === 'focus' && isFocus}`} onClick={() => {
+                        if (mode === 'focus' && isFocus) {
+                            handlePause();
+                        } else {
+                            handleFocus();
+                        }
+                    }}> {focusButtonDisplay()} </button>
                 </div>
                 <div className='break-timer'>
                     <h1>Break</h1>
                     <h2><CircularProgressbar value={breakTime} text={formatTime(breakTime)} maxValue={300} strokeWidth={2} styles={buildStyles({
-                        textColor: textColor, pathColor: textColor,
-                    })} /></h2>
-                    <div className='break-btns'>
-                        <button className='btn' onClick={minusFiveBreak}>-5 : 00</button>
-                        <button className={`btn ${mode === 'break' && isBreak}`} onClick={() => {
-                            if (mode === 'break' && isBreak) {
-                                handlePause();
-                            } else {
-                                handleBreak();
-                            }
-                        }}> {mode === 'break' && isBreak ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />} </button>
-                        <button className='btn' onClick={addfiveBreak}>+5 : 00</button>
-                    </div>
+                        textColor: '#000000', pathColor: '#000000',
+                    })}/></h2>
+                    <button className={`btn ${mode === 'break' && isBreak}`} onClick={() => {
+                        if (mode === 'break' && isBreak) {
+                            handlePause();
+                        } else {
+                            handleBreak();
+                        }
+                    }}> {breakButtonDisplay()} </button>
                 </div>
             </div>
             <p className='cycle'>Pomodoros Completed: {cycles}</p>
