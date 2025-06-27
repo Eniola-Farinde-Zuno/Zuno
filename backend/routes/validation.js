@@ -15,6 +15,15 @@ const validateUser = (req, res, next) => {
     next();
 };
 
+const validateTask = (req, res, next) => {
+    const { body: { title, priority }} = req;
+    if (!title || !priority) {
+        return res.status(400).json({ message: "Title and Priority are required." });
+    }
+    next();
+}
+
 module.exports = {
     validateUser,
+    validateTask,
 };
