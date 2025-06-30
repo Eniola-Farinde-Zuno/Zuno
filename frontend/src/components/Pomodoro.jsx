@@ -96,9 +96,9 @@ const Pomodoro = () => {
     const handleReset = () => {
         handlePause();
         if (mode === 'focus') {
-            setFocusTime(25 * 60);
+            setFocusTime(25 * SECS_IN_MIN);
         } else {
-            setBreakTime(5 * 60);
+            setBreakTime(5 * SECS_IN_MIN);
         }
     }
     const addFive = () => {
