@@ -23,12 +23,26 @@ model User {
   tasks     Task[]
 }
 
+enum priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum status {
+  NONE
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+  BLOCKED
+}
+
 model Task {
   id          Int    @id @default(autoincrement())
   title       String
   description String?
-  status      String
-  priority    String
+  status      status @default(NONE)
+  priority    priority
   userId      Int
   user        User   @relation(fields: [userId], references: [id])
   deadline    DateTime

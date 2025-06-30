@@ -3,15 +3,17 @@ const router = express.Router();
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const { validateTask } = require('../routes/validation');
+const { MESSAGES } = require('../messages/messages');
 
 router.post('/task', validateTask, async (req, res) => {
-    const { title, description, priority, deadline } = req.body;
+    const { title, description, priority, deadline, status } = req.body;
     const task = await prisma.task.create({
         data: {
             title: title,
             description: description ? description : "",
             priority: priority,
             deadline: deadline,
+            status: status,
         }
     })
     res.json(task)
@@ -24,7 +26,7 @@ router.delete('/task/:id', async (req, res) => {
             id: id
         }
     })
-    res.json({ message: "Task deleted" })
+    res.json({ message: MESSAGES.TASK_DELETED })
 })
 
 router.put('/task/:id', validateTask, async (req, res) => {
@@ -38,7 +40,7 @@ router.put('/task/:id', validateTask, async (req, res) => {
             deadline: deadline,
         }
     })
-    res.json({ message: "Task updated" })
+    res.json({ message: MESSAGES.TASK_UPDATED })
 })
 
 router.get('/tasks', async (req, res) => {

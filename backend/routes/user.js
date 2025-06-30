@@ -19,8 +19,8 @@ router.get('/:id', async (req, res) => {
     });
     res.json(user);
   } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error(error);
+    res.status(500).json({ error});
   }
 });
 
