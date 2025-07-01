@@ -36,7 +36,7 @@ const Sidebar = () => {
                         <div className="sidebar-nav">
                             <ul>
                                 <li>
-                                    <Link to="/tasks" className="sidebar-nav-item" onClick={closeSidebar}>
+                                    <Link to="/" className="sidebar-nav-item" onClick={closeSidebar}>
                                         <h1><FontAwesomeIcon icon={faHouse} /> Home</h1>
                                     </Link>
                                 </li>
@@ -53,7 +53,7 @@ const Sidebar = () => {
                     <div className="sidebar-minimized-content">
                         <ul>
                             <li>
-                                <Link to="/tasks" className="sidebar-nav-item" onClick={closeSidebar}>
+                                <Link to="/" className="sidebar-nav-item" onClick={closeSidebar}>
                                     <FontAwesomeIcon icon={faHouse} />
                                 </Link>
                             </li>
