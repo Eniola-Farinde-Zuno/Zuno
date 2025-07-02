@@ -4,6 +4,10 @@ const utils = () => {
     const [greeting, setGreeting] = useState('');
     const [firstName, setFirstName] = useState('');
     const URL_PREFIX = 'http://localhost:5000/api';
+    const MORNING = 'Good Morning';
+    const AFTERNOON = 'Good Afternoon';
+    const EVENING = 'Good Evening';
+    const HOUR = 60 * 60 * 1000;
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user.id;
 
@@ -12,16 +16,16 @@ const utils = () => {
             const currentHour = new Date().getHours();
             let newGreeting = '';
             if (currentHour < 12) {
-            newGreeting = 'Good Morning';
+            newGreeting = MORNING;
             } else if (currentHour >= 12 && currentHour < 18) {
-            newGreeting = 'Good Afternoon';
+            newGreeting = AFTERNOON;
             } else {
-            newGreeting = 'Good Evening';
+            newGreeting = EVENING;
             }
             setGreeting(newGreeting);
         };
         updateGreeting();
-        const interval = setInterval(updateGreeting, 60 * 60 * 1000);
+        const interval = setInterval(updateGreeting, HOUR);
         return () => clearInterval(interval);
     }, []);
 
