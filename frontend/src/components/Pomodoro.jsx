@@ -6,15 +6,13 @@ import 'react-circular-progressbar/dist/styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import { faPause } from '@fortawesome/free-solid-svg-icons';
+import utils from '../utils/utils';
 
 
 const Pomodoro = () => {
     const SECS_IN_MIN = 60;
     const TEXT_COLOR = '#000000';
-    const user = JSON.parse(localStorage.getItem('user'));
-    const userId = user.id;
-    const [greeting, setGreeting] = useState('');
-    const [firstName, setFirstName] = useState('');
+    const {greeting, firstName} = utils();
     const [focusTime, setFocusTime] = useState(() => {
         const savedTime = localStorage.getItem('focusTime');
         return savedTime ? parseInt(savedTime, 10) : 25 * SECS_IN_MIN;
@@ -40,33 +38,6 @@ const Pomodoro = () => {
     useEffect(() => { localStorage.setItem('isFocus', isTimer && mode === 'focus'); }, [isTimer, mode]);
     useEffect(() => { localStorage.setItem('isBreak', isTimer && mode === 'break'); }, [isTimer, mode]);
     useEffect(() => { localStorage.setItem('mode', mode); }, [mode]);
-
-    useEffect(() => {
-        const updateGreeting = () => {
-          const currentHour = new Date().getHours();
-          let newGreeting = '';
-          if (currentHour < 12) {
-            newGreeting = 'Good Morning';
-          } else if (currentHour >= 12 && currentHour < 18) {
-            newGreeting = 'Good Afternoon';
-          } else {
-            newGreeting = 'Good Evening';
-          }
-          setGreeting(newGreeting);
-        };
-        updateGreeting();
-        const interval = setInterval(updateGreeting, 60 * 60 * 1000);
-        return () => clearInterval(interval);
-      }, []);
-
-    useEffect(() => {
-        async function userFirstName() {
-            const response = await fetch(`http://localhost:5000/api/user/${userId}`);
-            const data = await response.json();
-            setFirstName(data.firstName);
-        }
-        userFirstName();
-    }, [userId]);
 
     useEffect(() => {
         if (isTimer) {
