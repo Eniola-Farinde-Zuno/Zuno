@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from '../assets/zuno-logo.png';
-import '../components/SignUp.css'
+import '../components/SignUp.css';
+import { auth } from "../utils/api"
 
 const SignIn = () => {
     const [form, setForm] = useState({});
@@ -20,21 +21,14 @@ const SignIn = () => {
             setMessage('Email and password are required.');
             return;
         }
-        const response = await fetch("http://localhost:5000/api/auth/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(form)
-        });
-        const data = await response.json();
-        if (response.ok) {
+        const data = await auth.login(form.email, form.password)
+        if (data.token) {
             setMessage(`Welcome Back, ${data.user.firstName}!`);
             setSuccess(true);
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             setForm({ email: '', password: '' });
-            navigate('/pomodoro');
+            navigate('/tasklist');
 
         } else {
             setMessage(data.message);

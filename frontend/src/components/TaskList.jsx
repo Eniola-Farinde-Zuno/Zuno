@@ -5,18 +5,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import utils from "../utils/utils";
+import { task } from "../utils/api";
 
 const TaskList = () => {
-    const URL_PREFIX = "http://localhost:5000/api/task";
     const { greeting, firstName } = utils();
     const [tasks, setTasks] = useState([]);
     const [edit, setEdit] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newTask, setNewTask] = useState({ title: "", description: "", deadline: "", priority: "", status: ""});
+
     useEffect(() => {
         const fetchTasks = async () => {
-            const response = await fetch(`${URL_PREFIX}/all`);
-            const data = await response.json();
+            const data = await task.all();
             setTasks(data);
         };
         fetchTasks();
@@ -40,7 +40,6 @@ const TaskList = () => {
     };
     const addTask = async (e) => {
         e.preventDefault();
-        const token = localStorage.getItem('token');
         let formattedDeadline = null;
         if (newTask.deadline) {
             formattedDeadline = new Date(`${newTask.deadline}T00:00:00.000Z`).toISOString();
@@ -52,16 +51,8 @@ const TaskList = () => {
             deadline: formattedDeadline,
             status: newTask.status || "IN_PROGRESS"
         };
-        const response = await fetch(`${URL_PREFIX}/add`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(taskData),
-        });
-        const data = await response.json();
-        setTasks(prevTasks => [...prevTasks, data]);
+        const addedTask = await task.add(taskData);
+        setTasks(prevTasks => [...prevTasks, addedTask]);
         closeModal();
     };
     const startEdit = (task) => {
@@ -71,7 +62,6 @@ const TaskList = () => {
     };
     const updateTask = async (e) => {
         e.preventDefault();
-        const token = localStorage.getItem('token');
         let formattedDeadline = null;
         if (newTask.deadline) {
             formattedDeadline = new Date(`${newTask.deadline}T00:00:00.000Z`).toISOString();
@@ -83,16 +73,8 @@ const TaskList = () => {
             deadline: formattedDeadline,
             status: newTask.status
         };
-        const response = await fetch(`${URL_PREFIX}/${newTask.id}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(taskData),
-        });
-        const responseData = await response.json();
-        const taskUpdated = responseData.updatedTask;
+        const response = await task.update(newTask.id, taskData)
+        const taskUpdated = response.updatedTask;
         setTasks(prevTasks =>
             prevTasks.map(task =>
                 task.id === taskUpdated.id ? taskUpdated : task
@@ -101,31 +83,15 @@ const TaskList = () => {
         closeModal();
     };
     const deleteTask = async (id) => {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${URL_PREFIX}/${id}`, {
-            method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        await response.json();
+        const response = await task.delete(id)
+        await response.json;
         setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
     };
     const toggleCheckbox =  async (checkedTask) => {
-        const token = localStorage.getItem('token');
         const newStatus = checkedTask.status === "COMPLETED" ? "IN_PROGRESS" : "COMPLETED";
         const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline ? new Date(checkedTask.deadline).toISOString().split('T')[0] : "",};
-        const response = await fetch(`${URL_PREFIX}/${checkedTask.id}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(updatedData),
-        });
-        const responseData = await response.json();
+        const responseData = await task.update(checkedTask.id, updatedData);
         const taskUpdated = responseData.updatedTask;
-
         setTasks(prevTasks =>
             prevTasks.map(task =>
                 task.id === taskUpdated.id ? taskUpdated : task

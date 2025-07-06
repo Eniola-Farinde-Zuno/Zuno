@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import logo from '../assets/zuno-logo.png';
 import '../components/SignUp.css'
 import { Link, useNavigate } from "react-router-dom";
+import { auth } from "../utils/api"
 
 const SignUp = () => {
     const [form , setForm] = useState({ firstName: '', lastName: '', email: '', password: ''});
@@ -13,15 +14,9 @@ const SignUp = () => {
 
     const signup = async (e) => {
         e.preventDefault();
-        const response = await fetch("http://localhost:5000/api/auth/signup", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(form)
-        });
-        const data = await response.json();
-        if (response.ok) {
+        const data = await auth.signup(form);
+
+        if (data.user) {
             setMessage(`Welcome, ${data.user.firstName}!`);
             navigate("/signin");
         } else {
