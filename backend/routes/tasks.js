@@ -14,7 +14,7 @@ router.post('/task/add', authenticateToken, validateTask, async (req, res) => {
             title: title,
             description: description ? description : "",
             priority: priority,
-            deadline: deadline ? new Date(deadline).toISOString() : null,
+            deadline: deadline,
             status: status,
             user: {
                 connect: {
@@ -47,7 +47,7 @@ router.put('/task/:id', authenticateToken,validateTask, async (req, res) => {
             title: title,
             description: description ? description : "",
             priority: priority,
-            deadline: deadline ? new Date(deadline).toISOString() : null,
+            deadline: deadline,
             status: status,
         }
     })
