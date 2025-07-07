@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate} from "react-router-dom";
 import logo from "../assets/zuno-sidebar-logo.png";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faTimes, faHouse, faClockRotateLeft } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faTimes, faHouse, faClockRotateLeft, faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import "./Sidebar.css";
 
 const Sidebar = () => {
@@ -21,6 +21,11 @@ const Sidebar = () => {
     const closeSidebar = () => {
         setIsMinimized(false);
         setIsOpen(false);
+    };
+    const logout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        Navigate('/signin');
     };
 
     return (
@@ -45,6 +50,11 @@ const Sidebar = () => {
                                         <h1><FontAwesomeIcon icon={faClockRotateLeft} /> Pomodoro</h1>
                                     </Link>
                                 </li>
+                                <li>
+                                    <Link to="/signin" className="sidebar-nav-item-logout" onClick={logout}>
+                                        <h1><FontAwesomeIcon icon={faArrowRightFromBracket} /> Log Out</h1>
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -60,6 +70,11 @@ const Sidebar = () => {
                             <li>
                                 <Link to="/pomodoro" className="sidebar-nav-item" onClick={closeSidebar}>
                                     <FontAwesomeIcon icon={faClockRotateLeft} />
+                                </Link>
+                            </li>
+                            <li>
+                                <Link to="/signin" className="sidebar-nav-item-logout" onClick={logout}>
+                                    <FontAwesomeIcon icon={faArrowRightFromBracket} />
                                 </Link>
                             </li>
                         </ul>
