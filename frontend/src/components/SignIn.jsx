@@ -4,7 +4,7 @@ import logo from '../assets/zuno-logo.png';
 import '../components/SignUp.css';
 import { auth } from "../utils/api"
 
-const SignIn = () => {
+const SignIn = ({setIsLoggedIn}) => {
     const [form, setForm] = useState({});
     const [message, setMessage] = useState("");
     const [success, setSuccess] = useState(false);
@@ -27,6 +27,7 @@ const SignIn = () => {
             setSuccess(true);
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            setIsLoggedIn(true);
             setForm({ email: '', password: '' });
             navigate('/tasklist');
 
