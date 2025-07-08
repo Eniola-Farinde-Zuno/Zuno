@@ -57,7 +57,7 @@
     display: none;
     padding-top: 60px;
     text-align: center;
-    margin-top: 70px;
+    margin-top: 10rem;
 }
 
 .sidebar.minimized .sidebar-minimized-content {
@@ -76,7 +76,7 @@
 
 .sidebar-minimized-content a {
     color: #fff;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     text-decoration: none;
 }
 
@@ -123,5 +123,19 @@
 }
 
 .sidebar-nav h1{
-    font-size: 1.5em;
+    font-size: 1.2rem;
+    margin-left: 25px;
+}
+
+.sidebar-nav-item-logout {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    display: block;
+    margin-top: 25rem;
+}
+
+.sidebar-nav-item-logout:hover {
+    color: #ccc;
+    text-decoration: underline;
 }
