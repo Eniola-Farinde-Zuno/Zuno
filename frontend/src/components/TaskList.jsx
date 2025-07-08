@@ -12,7 +12,7 @@ const TaskList = () => {
     const [tasks, setTasks] = useState([]);
     const [edit, setEdit] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newTask, setNewTask] = useState({ title: "", description: "", deadline: "", priority: "", status: ""});
+    const [newTask, setNewTask] = useState({ title: "", description: "", deadline: "", priority: "", status: "", size: "" });
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -31,12 +31,12 @@ const TaskList = () => {
     const openModal = () => {
         setIsModalOpen(true);
         setEdit(false);
-        setNewTask({ title: "", description: "", deadline: "", priority: "", status: ""});
+        setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: ""});
     };
     const closeModal = () => {
         setIsModalOpen(false);
         setEdit(false);
-        setNewTask({ title: "", description: "", deadline: "", priority: "", status: ""});
+        setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: ""});
     };
     const addTask = async (e) => {
         e.preventDefault();
@@ -49,7 +49,8 @@ const TaskList = () => {
             description: newTask.description,
             priority: newTask.priority,
             deadline: formattedDeadline,
-            status: newTask.status || "IN_PROGRESS"
+            status: newTask.status || "IN_PROGRESS",
+            size: newTask.size
         };
         const addedTask = await task.add(taskData);
         setTasks(prevTasks => [...prevTasks, addedTask]);
@@ -58,7 +59,7 @@ const TaskList = () => {
     const startEdit = (task) => {
         setEdit(true);
         setIsModalOpen(true);
-        setNewTask({ ...task, deadline: task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : "", priority: task.priority, status: task.status});
+        setNewTask({ ...task, deadline: task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : "", priority: task.priority, status: task.status, size: task.size });
     };
     const updateTask = async (e) => {
         e.preventDefault();
@@ -71,7 +72,8 @@ const TaskList = () => {
             description: newTask.description,
             priority: newTask.priority,
             deadline: formattedDeadline,
-            status: newTask.status
+            status: newTask.status,
+            size: newTask.size
         };
         const response = await task.update(newTask.id, taskData)
         const taskUpdated = response.updatedTask;
@@ -89,7 +91,7 @@ const TaskList = () => {
     };
     const toggleCheckbox =  async (checkedTask) => {
         const newStatus = checkedTask.status === "COMPLETED" ? "IN_PROGRESS" : "COMPLETED";
-        const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline ? new Date(checkedTask.deadline).toISOString().split('T')[0] : "",};
+        const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline};
         const responseData = await task.update(checkedTask.id, updatedData);
         const taskUpdated = responseData.updatedTask;
         setTasks(prevTasks =>
@@ -123,6 +125,7 @@ const TaskList = () => {
                                     )}
                                     <span className="task-detail">Priority: {task.priority}</span>
                                     <span className="task-detail">Status: {task.status}</span>
+                                    <span className="task-detail">Size: {task.size}</span>
                                 </div>
                             </div>
                             <div className="task-actions">
@@ -168,6 +171,16 @@ const TaskList = () => {
                                     <option value="CLOSED">Closed</option>
                                     <option value="BLOCKED">Blocked</option>
                                     <option value="COMPLETED">Completed</option>
+                                </select>
+                            </label>
+                            <label>
+                                Size:
+                                <select name="size" value={newTask.size} onChange={handleInput}>
+                                    <option value="NONE">Select Size</option>
+                                    <option value="EXTRA_SMALL">XS</option>
+                                    <option value="SMALL">S</option>
+                                    <option value="MEDIUM">M</option>
+                                    <option value="LARGE">L</option>
                                 </select>
                             </label>
                             <button type="submit">{edit ? "Update Task" : "Add Task"}</button>

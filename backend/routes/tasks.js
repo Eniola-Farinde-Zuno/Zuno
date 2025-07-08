@@ -8,7 +8,7 @@ const  MESSAGES = require('../messages/messages');
 
 router.post('/task/add', authenticateToken, validateTask, async (req, res) => {
     const userId = req.user.id;
-    const { title, description, priority, deadline, status } = req.body;
+    const { title, description, priority, deadline, status, size } = req.body;
     const task = await prisma.task.create({
         data: {
             title: title,
@@ -16,6 +16,7 @@ router.post('/task/add', authenticateToken, validateTask, async (req, res) => {
             priority: priority,
             deadline: deadline,
             status: status,
+            size: size,
             user: {
                 connect: {
                     id: userId
@@ -38,7 +39,7 @@ router.delete('/task/:id', authenticateToken,async (req, res) => {
 
 router.put('/task/:id', authenticateToken,validateTask, async (req, res) => {
     const { id } = req.params;
-    const { title, description, priority, deadline, status } = req.body;
+    const { title, description, priority, deadline, status, size } = req.body;
     const updatedTask = await prisma.task.update({
         where: {
             id: parseInt(id),
@@ -49,6 +50,7 @@ router.put('/task/:id', authenticateToken,validateTask, async (req, res) => {
             priority: priority,
             deadline: deadline,
             status: status,
+            size: size,
         }
     })
     res.json({ updatedTask, message: MESSAGES.TASK_UPDATED })

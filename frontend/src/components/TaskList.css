@@ -18,7 +18,7 @@
     list-style: none;
     padding: 0;
     width: 100%;
-    max-width: 550px;
+    max-width: 650px;
     margin-bottom: 20px;
 }
 
@@ -176,6 +176,7 @@
     font-size: 1em;
     font-family: var(--font-family);
 }
+
 .modal-content form button {
     background-color: #333;
     color: #eee;
