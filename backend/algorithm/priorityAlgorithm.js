@@ -1,5 +1,6 @@
 const priorityScore = (task) => {
     ONE_DAY_IN_SECONDS = 1000 * 60 * 60 * 24;
+    //weights for each category
     WI = 0.3;
     WD = 0.4;
     WA = 0.2;
@@ -13,12 +14,14 @@ const priorityScore = (task) => {
     const SEVEN_DAYS = 7
     const ONE_DAY = 1
 
+    //gets tasks from backend and assigns importance score based on priority chosen by user
     const importance = {
         'HIGH': HIGH_SCORE,
         'MEDIUM': MEDIUM_SCORE,
         'LOW': LOW_SCORE
     }[task.priority];
 
+    //gets tasks from backend and calculate and assign urgency score based on deadline defined by user
     let urgency;
     if (task.deadline) {
         const deadline = new Date(task.deadline);
@@ -34,6 +37,7 @@ const priorityScore = (task) => {
             urgency = LOW_SCORE;
         }
     }
+    //gets tasks from backend and calculates and assign age score based on date created
     let age;
     if (task.createdAt) {
         const createdDate = new Date(task.createdAt);
@@ -49,7 +53,7 @@ const priorityScore = (task) => {
             age = LOW_SCORE;
         }
     }
-
+    //gets tasks from backend and assigns size score based on size chosen by user
     const size = {
         'EXTRA_SMALL': LOW_SCORE,
         'SMALL': SMALL_SCORE,
@@ -59,7 +63,7 @@ const priorityScore = (task) => {
 
     const priority = (WI * importance + WD * urgency + WA * age + WS * size)
     return parseFloat(priority.toFixed(2));
-    
+
 };
 
 module.exports = { priorityScore };
