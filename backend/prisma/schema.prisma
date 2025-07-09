@@ -46,13 +46,15 @@ enum size {
 }
 
 model Task {
-  id          Int    @id @default(autoincrement())
-  title       String
-  description String?
-  status      status @default(NONE)
-  priority    priority
-  size        size  @default(NONE)
-  userId      Int
-  user        User   @relation(fields: [userId], references: [id])
-  deadline    DateTime
+  id            Int    @id @default(autoincrement())
+  title         String
+  description   String?
+  status        status @default(NONE)
+  priority      priority
+  size          size  @default(NONE)
+  userId        Int
+  user          User   @relation(fields: [userId], references: [id])
+  deadline      DateTime
+  createdAt     DateTime @default(now())
+  priorityScore Float @default(0.0)
 }

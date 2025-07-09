@@ -53,7 +53,10 @@ const TaskList = () => {
             size: newTask.size
         };
         const addedTask = await task.add(taskData);
-        setTasks(prevTasks => [...prevTasks, addedTask]);
+        setTasks(prevTasks => {
+            const updated = [...prevTasks, addedTask];
+            return updated.sort((a, b) => b.priorityScore - a.priorityScore);
+        });
         closeModal();
     };
     const startEdit = (task) => {

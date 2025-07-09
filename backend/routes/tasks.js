@@ -4,61 +4,15 @@ const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const { validateTask } = require('../routes/validation');
 const authenticateToken = require('../validation/authMiddleware');
-const  MESSAGES = require('../messages/messages');
+const taskController = require('../algorithm/taskController');
 
-router.post('/task/add', authenticateToken, validateTask, async (req, res) => {
-    const userId = req.user.id;
-    const { title, description, priority, deadline, status, size } = req.body;
-    const task = await prisma.task.create({
-        data: {
-            title: title,
-            description: description ? description : "",
-            priority: priority,
-            deadline: deadline,
-            status: status,
-            size: size,
-            user: {
-                connect: {
-                    id: userId
-                }
-            }
-        }
-    })
-    res.json(task)
-})
 
-router.delete('/task/:id', authenticateToken,async (req, res) => {
-    const { id } = req.params;
-    await prisma.task.delete({
-        where: {
-            id: parseInt(id),
-        }
-    })
-    res.json({ message: MESSAGES.TASK_DELETED })
-})
+router.post('/task/add', authenticateToken, validateTask, taskController.addTask);
 
-router.put('/task/:id', authenticateToken,validateTask, async (req, res) => {
-    const { id } = req.params;
-    const { title, description, priority, deadline, status, size } = req.body;
-    const updatedTask = await prisma.task.update({
-        where: {
-            id: parseInt(id),
-        },
-        data: {
-            title: title,
-            description: description ? description : "",
-            priority: priority,
-            deadline: deadline,
-            status: status,
-            size: size,
-        }
-    })
-    res.json({ updatedTask, message: MESSAGES.TASK_UPDATED })
-})
+router.delete('/task/:id', authenticateToken, taskController.deleteTask);
 
-router.get('/task/all', async (req, res) => {
-    const tasks = await prisma.task.findMany();
-    res.json(tasks)
-})
+router.put('/task/:id', authenticateToken, validateTask, taskController.updateTask);
+
+router.get('/task/all', authenticateToken, taskController.getSortedTasks);
 
 module.exports = router
