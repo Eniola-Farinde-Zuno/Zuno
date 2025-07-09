@@ -1,23 +1,40 @@
 import React from 'react';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import SignUp from './components/SignUp';
 import SignIn from './components/SignIn';
 import Pomodoro from './components/Pomodoro';
 import Sidebar from './components/Sidebar';
 import TaskList from './components/TaskList';
-import { BrowserRouter as PrivateRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
+
+const PrivateRouter = ({ isLoggedIn }) => {
+  if (!isLoggedIn) {
+    return <Navigate to="/signin" replace />;
+  }
+  return <Outlet />;
+}
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("token") ? true : false);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
   return(
-    <PrivateRouter>
+    <Router>
       <Routes>
         <Route path="/" element={<SignUp />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/sidebar" element={<Sidebar />} />
-        <Route path="/pomodoro" element={<Pomodoro />} />
-        <Route path="/tasklist" element={<TaskList />} />
+        <Route path="/signin" element={<SignIn setIsLoggedIn={setIsLoggedIn} />} />
+        <Route element={<PrivateRouter isLoggedIn={isLoggedIn} />}>
+          <Route path="/sidebar" element={<Sidebar />} />
+          <Route path="/pomodoro" element={<Pomodoro />} />
+          <Route path="/tasklist" element={<TaskList setIsLoggedIn={setIsLoggedIn} />} />
+        </Route>
+        <Route path="*" element={<Navigate to={isLoggedIn ? "/sidebar" : "/signin"} />} />
       </Routes>
-    </PrivateRouter>
+    </Router>
   )
 
 }
