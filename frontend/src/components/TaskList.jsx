@@ -129,7 +129,9 @@ const TaskList = () => {
                                     <span className="task-detail">Priority: {task.priority}</span>
                                     <span className="task-detail">Status: {task.status}</span>
                                     <span className="task-detail">Size: {task.size}</span>
+                                    <span className="task-detail">Priority Score: {task.priorityScore}</span>
                                 </div>
+
                             </div>
                             <div className="task-actions">
                                 <button className="edit-btn" onClick={() => startEdit(task)}><FontAwesomeIcon icon={faEdit} /></button>
