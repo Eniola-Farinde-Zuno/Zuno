@@ -2,9 +2,17 @@ const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const { priorityScore } = require('./priorityAlgorithm');
 const  MESSAGES = require('../messages/messages');
+const { canStart, circularDependency, updateCanStart } = require('./dependency');
 
+const BLOCKED = 'BLOCKED';
+const IN_PROGRESS = 'IN_PROGRESS';
+const COMPLETED = 'COMPLETED';
 const getSortedTasks = async (req, res) => {
-    const tasks = await prisma.task.findMany();
+    const tasks = await prisma.task.findMany({
+        where: {
+            userId: req.user.id
+        }
+    });
     const tasksWithPriority = tasks.map(task => ({
         ...task,
         priorityScore: priorityScore(task)
@@ -15,7 +23,8 @@ const getSortedTasks = async (req, res) => {
 
 const addTask = async (req, res) => {
     const userId = req.user.id;
-    const { title, description, priority, deadline, status, size } = req.body;
+    const { title, description, priority, deadline, status, size, dependencies } = req.body;
+    const parsedDependencies = dependencies ? dependencies.map(Number) : [];
     const taskData = {
         title: title,
         description: description ? description : "",
@@ -24,12 +33,40 @@ const addTask = async (req, res) => {
         status: status,
         size: size,
         createdAt: new Date(),
+        dependencies: parsedDependencies,
         user: {
             connect: {
                 id: userId
             }
         }
     };
+
+    const allExistingTasks = await prisma.task.findMany({
+        where: {
+            userId: req.user.id
+        },
+        select: {
+            id: true,
+            dependencies: true,
+            status: true
+        }
+    });
+    const isCircular = await circularDependency(taskData, allExistingTasks);
+    if (isCircular) {
+        return res.status(400).json({ message: MESSAGES.CIRCULAR_DEPENDENCY});
+    }
+    const initialCanStart = await canStart(taskData, allExistingTasks);
+    let finalStatus = status;
+    if (!initialCanStart && taskData.dependencies.length > 0) {
+        finalStatus = BLOCKED;
+    } else if (finalStatus === BLOCKED) {
+        finalStatus = IN_PROGRESS;
+    } else if (!finalStatus) {
+        finalStatus = IN_PROGRESS;
+    }
+    taskData.status = finalStatus;
+    taskData.canStart = initialCanStart;
+    taskData.dependencies = parsedDependencies;
     const newTask = await prisma.task.create({
         data: {
             ...taskData,
@@ -41,14 +78,36 @@ const addTask = async (req, res) => {
 
 const updateTask = async (req, res) => {
     const { id } = req.params;
-    const { title, description, priority, deadline, status, size } = req.body;
+    const { title, description, priority, deadline, status, size, dependencies } = req.body;
     const existingTask = await prisma.task.findUnique({
         where: { id: parseInt(id) }
     });
     const combinedTaskData = {
         ...existingTask,
         ...req.body,
-        createdAt: existingTask.createdAt
+        createdAt: existingTask.createdAt,
+        dependencies: dependencies || existingTask.dependencies,
+    }
+    const allExistingTasks = await prisma.task.findMany({
+        where: {
+            userId: req.user.id
+        },
+        select: {
+            id: true,
+            dependencies: true,
+            status: true
+        }
+    });
+    const isCircular = await circularDependency(combinedTaskData, allExistingTasks);
+    if (isCircular) {
+        return res.status(400).json({ message: MESSAGES.CIRCULAR_DEPENDENCY });
+    }
+    const currentCanStart = canStart(combinedTaskData, allExistingTasks);
+    let finalStatus = combinedTaskData.status;
+    if (!currentCanStart && combinedTaskData.dependencies.length > 0) {
+        finalStatus = BLOCKED;
+    } else if (currentCanStart && finalStatus === BLOCKED) {
+        finalStatus = IN_PROGRESS;
     }
     const newPriorityScore = priorityScore(combinedTaskData);
     const updatedTask = await prisma.task.update({
@@ -60,19 +119,37 @@ const updateTask = async (req, res) => {
             deadline: deadline,
             status: status,
             size: size,
-            priorityScore: newPriorityScore
+            priorityScore: newPriorityScore,
+            canStart: currentCanStart,
+            dependencies: dependencies || existingTask.dependencies,
         }
     });
+    const dependenciesModified = dependencies !== undefined && JSON.stringify(dependencies) !== JSON.stringify(existingTask.dependencies);
+    if (updatedTask.status === COMPLETED || dependenciesModified) {
+        await updateCanStart(prisma);
+    }
     res.json({ updatedTask, message: MESSAGES.TASK_UPDATED })
 };
 
 const deleteTask = async (req, res) => {
     const { id } = req.params;
+    const dependentTasks = await prisma.task.findMany({
+        where: {
+            dependencies: {
+                has: parseInt(id)
+            }
+        },
+        select: { id: true, title: true }
+    })
+    if (dependentTasks.length > 0) {
+        return res.status(400).json()
+    }
     await prisma.task.delete({
         where: {
             id: parseInt(id)
         }
     });
+    await updateCanStart(prisma);
     res.json({ message: MESSAGES.TASK_DELETED});
 };
 
