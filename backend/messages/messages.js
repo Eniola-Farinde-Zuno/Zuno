@@ -5,6 +5,7 @@ const MESSAGES = {
   INVALID_PASSWORD: "Incorrect password",
   TASK_DELETED: "Task deleted successfully",
   TASK_UPDATED: "Task updated successfully",
+  CIRCULAR_DEPENDENCY: "Circular dependency detected",
 };
 
 module.exports = MESSAGES;
