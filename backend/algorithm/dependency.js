@@ -16,53 +16,52 @@ const canStart = (task, tasks) => {
     }
     return true;
 };
+
+// detecting cycle in a directed graph
+//refractored to not traverse the whole graph and only traverse the nodes that are in the dependency list
 const circularDependency = async (taskData, existingTasks) => {
     const graph = new Map();
-    const inDegrees = new Map();
     const allTasksForGraph = existingTasks
         .filter(t => t.id !== taskData.id)
         .map(t => ({ id: t.id, dependencies: t.dependencies }));
 
     allTasksForGraph.push({ id: taskData.id, dependencies: taskData.dependencies });
     for (const task of allTasksForGraph) {
-        graph.set(task.id, new Set());
-        inDegrees.set(task.id, 0);
+        graph.set(task.id, task.dependencies || []);
     }
-    for (const task of allTasksForGraph) {
-        if (task.dependencies && Array.isArray(task.dependencies)) {
-            for (const Id of task.dependencies) {
-                if (graph.has(Id)) {
-                    graph.get(Id).add(task.id);
-                    inDegrees.set(task.id, (inDegrees.get(task.id) || 0) + 1);
-                }
+    // detect cycle in the graph
+    const visited = new Set();
+    const recursionStack = new Set();
+    const hasCycle = (taskId) => {
+        if (recursionStack.has(taskId)) {
+            return true;
+        }
+        if (visited.has(taskId)) {
+            return false;
+        }
+        visited.add(taskId);
+        recursionStack.add(taskId);
+        for (const depId of graph.get(taskId) || []) {
+            if (hasCycle(depId)) {
+                return true;
             }
         }
+        recursionStack.delete(taskId);
+        return false;
     }
-    const q = [];
-    for (const [taskId, degree] of inDegrees.entries()) {
-        if (degree === 0) {
-            q.push(taskId);
+    for (const taskId of graph.keys()) {
+        if (hasCycle(taskId)) {
+            return true; // exiting as soon as cycle is found
         }
     }
-    let nodesCount = 0;
-    while (q.length > 0) {
-        const u = q.shift();
-        nodesCount++;
-        for (const v of graph.get(u)) {
-            inDegrees.set(v, inDegrees.get(v) - 1);
-            if (inDegrees.get(v) === 0) {
-                q.push(v);
-            }
-        }
-    }
-    return nodesCount !== allTasksForGraph.length;
+    return false;
 };
-
+// updating canStart and status fields
 const updateCanStart = async (prisma) => {
     const tasks = await prisma.task.findMany();
     const updates = [];
     for (const task of tasks) {
-        const currentCanStart = await canStart(task, tasks);
+        const currentCanStart = canStart(task, tasks);
         let newStatus = task.status;
         if (task.status === BLOCKED && currentCanStart) {
             newStatus = IN_PROGRESS;
