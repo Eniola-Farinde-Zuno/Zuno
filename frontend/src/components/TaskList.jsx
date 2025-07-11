@@ -6,6 +6,7 @@ import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import utils from "../utils/utils";
 import { task } from "../utils/api";
+import Modal from "./Modal";
 
 const TaskList = () => {
     const { greeting, firstName } = utils();
@@ -13,6 +14,10 @@ const TaskList = () => {
     const [edit, setEdit] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newTask, setNewTask] = useState({ title: "", description: "", deadline: "", priority: "", status: "", size: "" });
+    const [dependencies, setDependencies] = useState(null);
+    const IN_PROGRESS = "IN_PROGRESS";
+    const COMPLETED = "COMPLETED";
+    const BLOCKED = "BLOCKED";
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -32,11 +37,13 @@ const TaskList = () => {
         setIsModalOpen(true);
         setEdit(false);
         setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: ""});
+        setDependencies([]);
     };
     const closeModal = () => {
         setIsModalOpen(false);
         setEdit(false);
         setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: ""});
+        setDependencies([]);
     };
     const addTask = async (e) => {
         e.preventDefault();
@@ -49,8 +56,9 @@ const TaskList = () => {
             description: newTask.description,
             priority: newTask.priority,
             deadline: formattedDeadline,
-            status: newTask.status || "IN_PROGRESS",
-            size: newTask.size
+            status: newTask.status || IN_PROGRESS,
+            size: newTask.size,
+            dependencies: dependencies
         };
         const addedTask = await task.add(taskData);
         setTasks(prevTasks => {
@@ -63,6 +71,7 @@ const TaskList = () => {
         setEdit(true);
         setIsModalOpen(true);
         setNewTask({ ...task, deadline: task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : "", priority: task.priority, status: task.status, size: task.size });
+        setDependencies(task.dependencies || []);
     };
     const updateTask = async (e) => {
         e.preventDefault();
@@ -76,7 +85,8 @@ const TaskList = () => {
             priority: newTask.priority,
             deadline: formattedDeadline,
             status: newTask.status,
-            size: newTask.size
+            size: newTask.size,
+            dependencies: dependencies
         };
         const response = await task.update(newTask.id, taskData)
         const taskUpdated = response.updatedTask;
@@ -93,8 +103,8 @@ const TaskList = () => {
         setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
     };
     const toggleCheckbox =  async (checkedTask) => {
-        const newStatus = checkedTask.status === "COMPLETED" ? "IN_PROGRESS" : "COMPLETED";
-        const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline};
+        const newStatus = checkedTask.status === COMPLETED ? IN_PROGRESS : COMPLETED;
+        const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline, dependencies: checkedTask.dependencies };
         const responseData = await task.update(checkedTask.id, updatedData);
         const taskUpdated = responseData.updatedTask;
         setTasks(prevTasks =>
@@ -102,6 +112,16 @@ const TaskList = () => {
                 task.id === taskUpdated.id ? taskUpdated : task
             )
         );
+    }
+    const handleDependency = (e) => {
+        const options = e.target.options;
+        const selectedValues = [];
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].selected) {
+                selectedValues.push(options[i].value);
+            }
+        }
+        setDependencies(selectedValues);
     }
 
     return (
@@ -118,7 +138,8 @@ const TaskList = () => {
                 <ul className="tasks-ul">
                     {tasks.map((task) => (
                         <li key={`task-${task.id}`} className={`task-item ${task.status === 'COMPLETED' ? 'completed-task' : ''}`}>
-                            <input type="checkbox" checked={task.status === 'COMPLETED'} onChange={() => toggleCheckbox(task)} className="task-checkbox"/>
+                            <input type="checkbox" checked={task.status === COMPLETED} onChange={() => toggleCheckbox(task)} className="task-checkbox"
+                            disabled={!task.canStart && task.dependencies.length > 0}/>
                             <div className="task-content">
                                 <span className="task-title">{task.title}</span>
                                 {task.description && <span className="task-description">{task.description}</span>}
@@ -127,9 +148,17 @@ const TaskList = () => {
                                         <span className="task-detail">Due: {new Date(task.deadline).toLocaleDateString()}</span>
                                     )}
                                     <span className="task-detail">Priority: {task.priority}</span>
-                                    <span className="task-detail">Status: {task.status}</span>
-                                    <span className="task-detail">Size: {task.size}</span>
+                                    <span className={`task-detail ${task.status === BLOCKED ? 'blocked-status' : ''}`}>Status: {task.status}</span>
+                                    {!task.canStart && task.dependencies && (
+                                        <span className="task-detail blocked-message">
+                                            Blocked by: {
+                                                task.dependencies.map(depId => tasks.find(t => t.id === depId)?.title).join(', ')
+                                            }
+                                        </span>
+                                    )}
+                                    <span className="task-detail">Priority Score: {task.priorityScore}</span>
                                 </div>
+
                             </div>
                             <div className="task-actions">
                                 <button className="edit-btn" onClick={() => startEdit(task)}><FontAwesomeIcon icon={faEdit} /></button>
@@ -140,58 +169,17 @@ const TaskList = () => {
                 </ul>
             )}
             <button onClick={openModal}> Add Task</button>
-            {isModalOpen && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>{edit ? "Edit Task" : "Add New Task"}</h2>
-                        <form onSubmit={edit? updateTask : addTask}>
-                            <label>
-                                Title:
-                                <input type="text" name="title" value={newTask.title} onChange={handleInput} required/>
-                            </label>
-                            <label>
-                                Description:
-                                <textarea name="description" value={newTask.description} onChange={handleInput}></textarea>
-                            </label>
-                            <label>
-                                Due Date:
-                                <input type="date" name="deadline" value={newTask.deadline} onChange={handleInput}/>
-                            </label>
-                            <label>
-                                Priority:
-                                <select name="priority" value={newTask.priority} onChange={handleInput}>
-                                    <option value="">Select Priority</option>
-                                    <option value="LOW">Low</option>
-                                    <option value="MEDIUM">Medium</option>
-                                    <option value="HIGH">High</option>
-                                </select>
-                            </label>
-                            <label>
-                                Status:
-                                <select name="status" value={newTask.status} onChange={handleInput}>
-                                    <option value="">Select Status</option>
-                                    <option value="IN_PROGRESS">In Progress</option>
-                                    <option value="CLOSED">Closed</option>
-                                    <option value="BLOCKED">Blocked</option>
-                                    <option value="COMPLETED">Completed</option>
-                                </select>
-                            </label>
-                            <label>
-                                Size:
-                                <select name="size" value={newTask.size} onChange={handleInput}>
-                                    <option value="NONE">Select Size</option>
-                                    <option value="EXTRA_SMALL">XS</option>
-                                    <option value="SMALL">S</option>
-                                    <option value="MEDIUM">M</option>
-                                    <option value="LARGE">L</option>
-                                </select>
-                            </label>
-                            <button type="submit">{edit ? "Update Task" : "Add Task"}</button>
-                            <button type="button" onClick={closeModal}>Cancel</button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                edit={edit}
+                newTask={newTask}
+                handleInput={handleInput}
+                handleDependency={handleDependency}
+                dependencies={dependencies}
+                tasks={tasks}
+                onSubmit={edit ? updateTask : addTask}
+            />
         </div>
     )
 }
