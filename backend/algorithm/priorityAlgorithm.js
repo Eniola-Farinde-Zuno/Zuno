@@ -1,4 +1,7 @@
 const priorityScore = (task) => {
+    if (task.canStart === false) {
+        return 0;
+    }
     ONE_DAY_IN_SECONDS = 1000 * 60 * 60 * 24;
     //weights for each category
     WI = 0.3;
