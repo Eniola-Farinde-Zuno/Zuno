@@ -7,7 +7,7 @@
     box-sizing: border-box;
 }
 .task-header h1 {
-    font-size: 2.5em;
+    font-size: 2em;
     color: #000000;
     margin-bottom: 30px;
     font-weight: bold;
@@ -18,7 +18,7 @@
     list-style: none;
     padding: 0;
     width: 100%;
-    max-width: 650px;
+    max-width: 1200px;
     margin-bottom: 20px;
 }
 
@@ -26,17 +26,17 @@
     display: flex;
     align-items: center;
     background-color: var(--background-color);
-    border-radius: 5px;
     padding: 10px 15px;
     margin-bottom: 10px;
     gap: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-bottom: #ccc 1px solid;
+    line-height: 1rem;
 }
 
 .task-checkbox {
     appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     border: 2px solid #000;
     border-radius: 4px;
     cursor: pointer;
@@ -51,7 +51,7 @@
 
 .task-checkbox:checked::before {
     content: '\2714';
-    font-size: 18px;
+    font-size: 12px;
     color: #000;
     position: absolute;
     top: 50%;
@@ -67,13 +67,12 @@
 }
 
 .task-title {
-    font-weight: bold;
-    font-size: 1.1em;
+    font-size: 1em;
     color: #000;
 }
 
 .task-description {
-    font-size: 0.9em;
+    font-size: 0.88em;
     color: #555;
     margin-top: 2px;
     margin-bottom: 5px;
@@ -83,7 +82,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    font-size: 0.8em;
+    font-size: 0.6em;
     color: #555;
 }
 
@@ -103,7 +102,7 @@
 }
 
 .completed-task .task-detail {
-    background-color: #fff;
+    background-color: var(--background-color);
 }
 
 .task-actions {
@@ -122,3 +121,25 @@
     transition: color 0.2s;
 }
 
+.blocked-task {
+    opacity: 0.8;
+    border-left: 3px solid #ff6b6b !important;
+}
+
+.blocked-badge {
+    background: #ff6b6b;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+.blocked-status {
+    color: #ff6b6b;
+}
+
+.blocked-dependencies {
+    font-style: italic;
+    color: #ff6b6b;
+}

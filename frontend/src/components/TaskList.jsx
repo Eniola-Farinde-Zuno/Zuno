@@ -1,12 +1,10 @@
 import { React, useEffect, useState } from "react";
 import "./TaskList.css";
 import Sidebar from "./Sidebar";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import utils from "../utils/utils";
 import { task } from "../utils/api";
 import Modal from "./Modal";
+import {TaskTree} from "./TaskTree";
 
 const TaskList = () => {
     const { greeting, firstName } = utils();
@@ -17,7 +15,6 @@ const TaskList = () => {
     const [dependencies, setDependencies] = useState(null);
     const IN_PROGRESS = "IN_PROGRESS";
     const COMPLETED = "COMPLETED";
-    const BLOCKED = "BLOCKED";
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -129,44 +126,17 @@ const TaskList = () => {
             <Sidebar />
             <div className="task-header">
                 <h1> {greeting} {firstName}</h1>
-                <h1>Welcome to your Tasks</h1>
             </div>
             <h1>Task List</h1>
             {tasks.length === 0 ? (
                 <p>No tasks yet. Add a new task to get started!</p>
             ) : (
-                <ul className="tasks-ul">
-                    {tasks.map((task) => (
-                        <li key={`task-${task.id}`} className={`task-item ${task.status === 'COMPLETED' ? 'completed-task' : ''}`}>
-                            <input type="checkbox" checked={task.status === COMPLETED} onChange={() => toggleCheckbox(task)} className="task-checkbox"
-                            disabled={!task.canStart && task.dependencies.length > 0}/>
-                            <div className="task-content">
-                                <span className="task-title">{task.title}</span>
-                                {task.description && <span className="task-description">{task.description}</span>}
-                                <div className="task-details">
-                                    {task.deadline && (
-                                        <span className="task-detail">Due: {new Date(task.deadline).toLocaleDateString()}</span>
-                                    )}
-                                    <span className="task-detail">Priority: {task.priority}</span>
-                                    <span className={`task-detail ${task.status === BLOCKED ? 'blocked-status' : ''}`}>Status: {task.status}</span>
-                                    {!task.canStart && task.dependencies && (
-                                        <span className="task-detail blocked-message">
-                                            Blocked by: {
-                                                task.dependencies.map(depId => tasks.find(t => t.id === depId)?.title).join(', ')
-                                            }
-                                        </span>
-                                    )}
-                                    <span className="task-detail">Priority Score: {task.priorityScore}</span>
-                                </div>
-
-                            </div>
-                            <div className="task-actions">
-                                <button className="edit-btn" onClick={() => startEdit(task)}><FontAwesomeIcon icon={faEdit} /></button>
-                                <button className="delete-btn" onClick={() => deleteTask(task.id)}><FontAwesomeIcon icon={faTrash} /></button>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+                <TaskTree
+                    tasks={tasks}
+                    onToggleCheckbox={toggleCheckbox}
+                    onEditTask={startEdit}
+                    onDeleteTask={deleteTask}
+                />
             )}
             <button onClick={openModal}> Add Task</button>
             <Modal
