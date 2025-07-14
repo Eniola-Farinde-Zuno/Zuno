@@ -13,6 +13,7 @@ const TaskList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newTask, setNewTask] = useState({ title: "", description: "", deadline: "", priority: "", status: "", size: "" });
     const [dependencies, setDependencies] = useState(null);
+    const [showCompleted, setShowCompleted] = useState(false);
     const IN_PROGRESS = "IN_PROGRESS";
     const COMPLETED = "COMPLETED";
 
@@ -99,16 +100,30 @@ const TaskList = () => {
         await response.json;
         setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
     };
+    const filteredTasks = tasks.filter(task => showCompleted ? task.status === COMPLETED : task.status !== COMPLETED);
     const toggleCheckbox =  async (checkedTask) => {
         const newStatus = checkedTask.status === COMPLETED ? IN_PROGRESS : COMPLETED;
         const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline, dependencies: checkedTask.dependencies };
         const responseData = await task.update(checkedTask.id, updatedData);
         const taskUpdated = responseData.updatedTask;
-        setTasks(prevTasks =>
-            prevTasks.map(task =>
+        setTasks(prevTasks => {
+            let updatedTasks = prevTasks.map(task =>
                 task.id === taskUpdated.id ? taskUpdated : task
-            )
-        );
+            );
+            if (newStatus === COMPLETED) {
+                updatedTasks = updatedTasks.map(task => {
+                    if (task.dependencies?.includes(checkedTask.id)) {
+                        const newDependencies = task.dependencies.filter(depId => depId !== checkedTask.id);
+                        return {
+                            ...task,
+                            dependencies: newDependencies,
+                        };
+                    }
+                    return task;
+                });
+            }
+            return updatedTasks.sort((a, b) => b.priorityScore - a.priorityScore);
+        });
     }
     const handleDependency = (e) => {
         const options = e.target.options;
@@ -127,12 +142,15 @@ const TaskList = () => {
             <div className="task-header">
                 <h1> {greeting} {firstName}</h1>
             </div>
-            <h1>Task List</h1>
-            {tasks.length === 0 ? (
+            <div className="task-controls">
+                <h1>{showCompleted ? 'Completed Tasks' : 'Task List'}</h1>
+                <button onClick={() => setShowCompleted(!showCompleted)}>{showCompleted ? 'Show active tasks' : 'Show completed tasks'}</button>
+            </div>
+            {filteredTasks.length === 0 ? (
                 <p>No tasks yet. Add a new task to get started!</p>
             ) : (
                 <TaskTree
-                    tasks={tasks}
+                    tasks={filteredTasks}
                     onToggleCheckbox={toggleCheckbox}
                     onEditTask={startEdit}
                     onDeleteTask={deleteTask}

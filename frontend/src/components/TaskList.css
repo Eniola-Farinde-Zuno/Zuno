@@ -143,3 +143,16 @@
     font-style: italic;
     color: #ff6b6b;
 }
+
+.task-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    padding: 10px 0;
+}
+
+.task-controls h1 {
+    margin: 0;
+}
