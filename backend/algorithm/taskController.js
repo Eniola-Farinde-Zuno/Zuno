@@ -1,23 +1,34 @@
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const { priorityScore } = require('./priorityAlgorithm');
-const  MESSAGES = require('../messages/messages');
+const MESSAGES = require('../messages/messages');
 const { canStart, circularDependency, updateCanStart } = require('./dependency');
+const { getCacheKey, setCache, getCache, invalidateUserCache } = require('../utils/cache');
 
 const BLOCKED = 'BLOCKED';
 const IN_PROGRESS = 'IN_PROGRESS';
 const COMPLETED = 'COMPLETED';
 const getSortedTasks = async (req, res) => {
+    const userId = req.user.id;
+    const cacheKey = getCacheKey(userId, 'sortedTasks');
+
+    //check cache first
+    const cachedTasks = getCache(cacheKey);
+    if (cachedTasks) {
+        return res.json(cachedTasks);
+    }
     const tasks = await prisma.task.findMany({
         where: {
-            userId: req.user.id
+            userId: userId
         }
     });
     const tasksWithPriority = tasks.map(task => ({
         ...task,
-        priorityScore: priorityScore(task)
+        priorityScore: priorityScore(task, tasks)
     }));
     const sortedTasks = tasksWithPriority.sort((a, b) => b.priorityScore - a.priorityScore);
+    //caching the result
+    setCache(cacheKey, sortedTasks);
     res.json(sortedTasks);
 };
 
@@ -53,9 +64,9 @@ const addTask = async (req, res) => {
     });
     const isCircular = await circularDependency(taskData, allExistingTasks);
     if (isCircular) {
-        return res.status(400).json({ message: MESSAGES.CIRCULAR_DEPENDENCY});
+        return res.status(400).json({ message: MESSAGES.CIRCULAR_DEPENDENCY });
     }
-    const initialCanStart = await canStart(taskData, allExistingTasks);
+    const initialCanStart = canStart(taskData, allExistingTasks);
     let finalStatus = status;
     if (!initialCanStart && taskData.dependencies.length > 0) {
         finalStatus = BLOCKED;
@@ -70,14 +81,18 @@ const addTask = async (req, res) => {
     const newTask = await prisma.task.create({
         data: {
             ...taskData,
-            priorityScore: priorityScore(taskData)
+            priorityScore: priorityScore(taskData, [...allExistingTasks, taskData])
         }
     });
+    //invalidate cache after adding task
+    invalidateUserCache(userId);
+
     res.json(newTask);
 };
 
 const updateTask = async (req, res) => {
     const { id } = req.params;
+    const userId = req.user.id;
     const { title, description, priority, deadline, status, size, dependencies } = req.body;
     const existingTask = await prisma.task.findUnique({
         where: { id: parseInt(id) }
@@ -109,7 +124,10 @@ const updateTask = async (req, res) => {
     } else if (currentCanStart && finalStatus === BLOCKED) {
         finalStatus = IN_PROGRESS;
     }
-    const newPriorityScore = priorityScore(combinedTaskData);
+    const tasksForPriorityCalculation = allExistingTasks.map(task =>
+        task.id === parseInt(id) ? { ...task, ...combinedTaskData } : task
+    );
+    const newPriorityScore = priorityScore(combinedTaskData, tasksForPriorityCalculation);
     const updatedTask = await prisma.task.update({
         where: { id: parseInt(id) },
         data: {
@@ -128,11 +146,14 @@ const updateTask = async (req, res) => {
     if (updatedTask.status === COMPLETED || dependenciesModified) {
         await updateCanStart(prisma);
     }
+    //invalidate cache after updating task
+    invalidateUserCache(userId);
     res.json({ updatedTask, message: MESSAGES.TASK_UPDATED })
 };
 
 const deleteTask = async (req, res) => {
     const { id } = req.params;
+    const userId = req.user.id;
     const dependentTasks = await prisma.task.findMany({
         where: {
             dependencies: {
@@ -150,6 +171,8 @@ const deleteTask = async (req, res) => {
         }
     });
     await updateCanStart(prisma);
+    //invalidate cache after deleting task
+    invalidateUserCache(userId);
     res.json({ message: MESSAGES.TASK_DELETED});
 };
 
