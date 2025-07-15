@@ -17,11 +17,12 @@ const TaskList = () => {
     const IN_PROGRESS = "IN_PROGRESS";
     const COMPLETED = "COMPLETED";
 
+    const fetchTasks = async () => {
+        const data = await task.all();
+        setTasks(data.sort((a, b) => b.priorityScore - a.priorityScore));
+    };
+
     useEffect(() => {
-        const fetchTasks = async () => {
-            const data = await task.all();
-            setTasks(data);
-        };
         fetchTasks();
     }, []);
     const handleInput = (e) => {
@@ -58,11 +59,8 @@ const TaskList = () => {
             size: newTask.size,
             dependencies: dependencies
         };
-        const addedTask = await task.add(taskData);
-        setTasks(prevTasks => {
-            const updated = [...prevTasks, addedTask];
-            return updated.sort((a, b) => b.priorityScore - a.priorityScore);
-        });
+        await task.add(taskData);
+        await fetchTasks();
         closeModal();
     };
     const startEdit = (task) => {
@@ -86,44 +84,35 @@ const TaskList = () => {
             size: newTask.size,
             dependencies: dependencies
         };
-        const response = await task.update(newTask.id, taskData)
-        const taskUpdated = response.updatedTask;
-        setTasks(prevTasks =>
-            prevTasks.map(task =>
-                task.id === taskUpdated.id ? taskUpdated : task
-            )
-        );
+        await task.update(newTask.id, taskData)
+        await fetchTasks();
         closeModal();
     };
     const deleteTask = async (id) => {
-        const response = await task.delete(id)
-        await response.json;
-        setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+        await task.delete(id)
+        await fetchTasks();
     };
     const filteredTasks = tasks.filter(task => showCompleted ? task.status === COMPLETED : task.status !== COMPLETED);
     const toggleCheckbox =  async (checkedTask) => {
         const newStatus = checkedTask.status === COMPLETED ? IN_PROGRESS : COMPLETED;
         const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline, dependencies: checkedTask.dependencies };
-        const responseData = await task.update(checkedTask.id, updatedData);
-        const taskUpdated = responseData.updatedTask;
-        setTasks(prevTasks => {
-            let updatedTasks = prevTasks.map(task =>
-                task.id === taskUpdated.id ? taskUpdated : task
+        await task.update(checkedTask.id, updatedData);
+        if (newStatus === COMPLETED) {
+            const dependentTasks = tasks.filter(t =>
+                t.dependencies?.includes(checkedTask.id)
             );
-            if (newStatus === COMPLETED) {
-                updatedTasks = updatedTasks.map(task => {
-                    if (task.dependencies?.includes(checkedTask.id)) {
-                        const newDependencies = task.dependencies.filter(depId => depId !== checkedTask.id);
-                        return {
-                            ...task,
-                            dependencies: newDependencies,
-                        };
-                    }
-                    return task;
+
+            for (const dependentTask of dependentTasks) {
+                const newDependencies = dependentTask.dependencies.filter(
+                    depId => depId !== checkedTask.id
+                );
+                await task.update(dependentTask.id, {
+                    ...dependentTask,
+                    dependencies: newDependencies
                 });
             }
-            return updatedTasks.sort((a, b) => b.priorityScore - a.priorityScore);
-        });
+        }
+        await fetchTasks();
     }
     const handleDependency = (e) => {
         const options = e.target.options;
