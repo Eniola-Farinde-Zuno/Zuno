@@ -70,8 +70,9 @@ const priorityScore = (task, allTasks = []) => {
         allTasks.filter(t => t.dependencies && t.dependencies.includes(task.id)) :
         [];
     const hasDependencies = dependentTasks.length > 0;
+    const numberOfDependentTasks = hasDependencies ? dependentTasks.length : 0;
     const priority = hasDependencies ?
-        basePriority * (1 + DEPENDENCY_BOOST_PERCENTAGE / 100) :
+        basePriority * (1 + (DEPENDENCY_BOOST_PERCENTAGE / 100) * numberOfDependentTasks) :
         basePriority;
     return parseFloat(priority.toFixed(2));
 
