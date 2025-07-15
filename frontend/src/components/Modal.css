@@ -5,65 +5,164 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(141, 141, 141, 0.7);
+    background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family: var(--font-family)
 }
-
 .modal-content {
-    background-color: #ffff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    background-color: var(--background-color);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     width: 90%;
-    max-width: 500px;
-    color: #eee;
+    max-width: 700px;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .modal-content h2 {
-    color: #000000;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     text-align: center;
+    font-size: 1.5em;
+    font-weight: 600;
 }
 
-.modal-content form label {
-    display: block;
-    margin-bottom: 10px;
-    color: #000000;
-    font-weight: bold;
+.task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.modal-content form input[type="date"] {
-    width: 94%;
-    padding: 10px;
+.task-name, .description {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 0.95em;
+    color: #333;
+    background-color: #fcfcfc;
+    outline: none;
 }
 
-.modal-content form input[type="text"],
-.modal-content form textarea,
-.modal-content form select {
-    width: calc(100% - 20px);
-    padding: 10px;
-    margin-top: 5px;
-    border: 1px solid #333;
-    border-radius: 4px;
-    background-color: #fff;
-    color: #000;
-    font-size: 1em;
+.task-name {
+    font-weight: 600;
+    font-size: 1.1em;
+    padding: 12px;
+}
+
+.description {
+    min-height: 80px;
+    resize: vertical;
     font-family: var(--font-family);
 }
 
-.modal-content form button {
-    background-color: #333;
-    color: #eee;
-    padding: 10px 15px;
+.modal-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.date, .custom-select {
+    flex-grow: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background-color: #fcfcfc;
+    min-width: 120px;
+    box-sizing: border-box;
+}
+
+
+.date span {
+    color: #666;
+    font-size: 0.9em;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+.date .date-input {
+    flex-grow: 1;
     border: none;
-    border-radius: 5px;
+    background-color: transparent;
+    padding: 0;
+    font-size: 0.95em;
+    color: #333;
+}
+
+.modal-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
     cursor: pointer;
-    margin-top: 20px;
-    margin-right: 10px;
-    font-size: 1em;
-    transition: background-color 0.2s, color 0.2s;
+    font-size: 0.95em;
+    color: #333;
+    outline: none;
+    flex-grow: 1;
+    box-sizing: border-box;
+}
+
+.custom-select-arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #999;
+    pointer-events: none;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.cancel-button,
+.add-task-button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.cancel-button{
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #e0e0e0;
+}
+
+.cancel-button:hover {
+    background-color: #e5e5e5;
+    border-color: #d0d0d0;
+}
+
+.add-task-button {
+    background-color: #000;
+    color: #fff;
+    border: none;
 }
 
 .task-item .blocked-status {
