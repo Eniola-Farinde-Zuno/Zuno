@@ -29,11 +29,6 @@ export const TaskTree = ({ tasks, onToggleCheckbox, onEditTask, onDeleteTask }) 
 
         //sorting root tasks by priority score
         rootTasks.sort((a, b) => b.priorityScore - a.priorityScore);
-
-        //sorting children of each task
-        Object.values(taskMap).forEach(task => {
-            task.children.sort((a, b) => b.priorityScore - a.priorityScore);
-        });
         return rootTasks;
     };
 
