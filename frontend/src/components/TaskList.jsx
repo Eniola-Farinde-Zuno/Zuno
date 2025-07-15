@@ -1,12 +1,10 @@
 import { React, useEffect, useState } from "react";
 import "./TaskList.css";
 import Sidebar from "./Sidebar";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import utils from "../utils/utils";
 import { task } from "../utils/api";
 import Modal from "./Modal";
+import {TaskTree} from "./TaskTree";
 
 const TaskList = () => {
     const { greeting, firstName } = utils();
@@ -15,15 +13,16 @@ const TaskList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newTask, setNewTask] = useState({ title: "", description: "", deadline: "", priority: "", status: "", size: "" });
     const [dependencies, setDependencies] = useState(null);
+    const [showCompleted, setShowCompleted] = useState(false);
     const IN_PROGRESS = "IN_PROGRESS";
     const COMPLETED = "COMPLETED";
-    const BLOCKED = "BLOCKED";
+
+    const fetchTasks = async () => {
+        const data = await task.all();
+        setTasks(data.sort((a, b) => b.priorityScore - a.priorityScore));
+    };
 
     useEffect(() => {
-        const fetchTasks = async () => {
-            const data = await task.all();
-            setTasks(data);
-        };
         fetchTasks();
     }, []);
     const handleInput = (e) => {
@@ -60,11 +59,8 @@ const TaskList = () => {
             size: newTask.size,
             dependencies: dependencies
         };
-        const addedTask = await task.add(taskData);
-        setTasks(prevTasks => {
-            const updated = [...prevTasks, addedTask];
-            return updated.sort((a, b) => b.priorityScore - a.priorityScore);
-        });
+        await task.add(taskData);
+        await fetchTasks();
         closeModal();
     };
     const startEdit = (task) => {
@@ -88,30 +84,35 @@ const TaskList = () => {
             size: newTask.size,
             dependencies: dependencies
         };
-        const response = await task.update(newTask.id, taskData)
-        const taskUpdated = response.updatedTask;
-        setTasks(prevTasks =>
-            prevTasks.map(task =>
-                task.id === taskUpdated.id ? taskUpdated : task
-            )
-        );
+        await task.update(newTask.id, taskData)
+        await fetchTasks();
         closeModal();
     };
     const deleteTask = async (id) => {
-        const response = await task.delete(id)
-        await response.json;
-        setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+        await task.delete(id)
+        await fetchTasks();
     };
+    const filteredTasks = tasks.filter(task => showCompleted ? task.status === COMPLETED : task.status !== COMPLETED);
     const toggleCheckbox =  async (checkedTask) => {
         const newStatus = checkedTask.status === COMPLETED ? IN_PROGRESS : COMPLETED;
         const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline, dependencies: checkedTask.dependencies };
-        const responseData = await task.update(checkedTask.id, updatedData);
-        const taskUpdated = responseData.updatedTask;
-        setTasks(prevTasks =>
-            prevTasks.map(task =>
-                task.id === taskUpdated.id ? taskUpdated : task
-            )
-        );
+        await task.update(checkedTask.id, updatedData);
+        if (newStatus === COMPLETED) {
+            const dependentTasks = tasks.filter(t =>
+                t.dependencies?.includes(checkedTask.id)
+            );
+
+            for (const dependentTask of dependentTasks) {
+                const newDependencies = dependentTask.dependencies.filter(
+                    depId => depId !== checkedTask.id
+                );
+                await task.update(dependentTask.id, {
+                    ...dependentTask,
+                    dependencies: newDependencies
+                });
+            }
+        }
+        await fetchTasks();
     }
     const handleDependency = (e) => {
         const options = e.target.options;
@@ -129,44 +130,20 @@ const TaskList = () => {
             <Sidebar />
             <div className="task-header">
                 <h1> {greeting} {firstName}</h1>
-                <h1>Welcome to your Tasks</h1>
             </div>
-            <h1>Task List</h1>
-            {tasks.length === 0 ? (
+            <div className="task-controls">
+                <h1>{showCompleted ? 'Completed Tasks' : 'Task List'}</h1>
+                <button onClick={() => setShowCompleted(!showCompleted)}>{showCompleted ? 'Show active tasks' : 'Show completed tasks'}</button>
+            </div>
+            {filteredTasks.length === 0 ? (
                 <p>No tasks yet. Add a new task to get started!</p>
             ) : (
-                <ul className="tasks-ul">
-                    {tasks.map((task) => (
-                        <li key={`task-${task.id}`} className={`task-item ${task.status === 'COMPLETED' ? 'completed-task' : ''}`}>
-                            <input type="checkbox" checked={task.status === COMPLETED} onChange={() => toggleCheckbox(task)} className="task-checkbox"
-                            disabled={!task.canStart && task.dependencies.length > 0}/>
-                            <div className="task-content">
-                                <span className="task-title">{task.title}</span>
-                                {task.description && <span className="task-description">{task.description}</span>}
-                                <div className="task-details">
-                                    {task.deadline && (
-                                        <span className="task-detail">Due: {new Date(task.deadline).toLocaleDateString()}</span>
-                                    )}
-                                    <span className="task-detail">Priority: {task.priority}</span>
-                                    <span className={`task-detail ${task.status === BLOCKED ? 'blocked-status' : ''}`}>Status: {task.status}</span>
-                                    {!task.canStart && task.dependencies && (
-                                        <span className="task-detail blocked-message">
-                                            Blocked by: {
-                                                task.dependencies.map(depId => tasks.find(t => t.id === depId)?.title).join(', ')
-                                            }
-                                        </span>
-                                    )}
-                                    <span className="task-detail">Priority Score: {task.priorityScore}</span>
-                                </div>
-
-                            </div>
-                            <div className="task-actions">
-                                <button className="edit-btn" onClick={() => startEdit(task)}><FontAwesomeIcon icon={faEdit} /></button>
-                                <button className="delete-btn" onClick={() => deleteTask(task.id)}><FontAwesomeIcon icon={faTrash} /></button>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+                <TaskTree
+                    tasks={filteredTasks}
+                    onToggleCheckbox={toggleCheckbox}
+                    onEditTask={startEdit}
+                    onDeleteTask={deleteTask}
+                />
             )}
             <button onClick={openModal}> Add Task</button>
             <Modal
