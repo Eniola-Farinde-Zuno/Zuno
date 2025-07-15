@@ -15,7 +15,7 @@ const getSortedTasks = async (req, res) => {
     });
     const tasksWithPriority = tasks.map(task => ({
         ...task,
-        priorityScore: priorityScore(task)
+        priorityScore: priorityScore(task, tasks)
     }));
     const sortedTasks = tasksWithPriority.sort((a, b) => b.priorityScore - a.priorityScore);
     res.json(sortedTasks);
@@ -70,7 +70,7 @@ const addTask = async (req, res) => {
     const newTask = await prisma.task.create({
         data: {
             ...taskData,
-            priorityScore: priorityScore(taskData)
+            priorityScore: priorityScore(taskData, allExistingTasks)
         }
     });
     res.json(newTask);
@@ -109,7 +109,7 @@ const updateTask = async (req, res) => {
     } else if (currentCanStart && finalStatus === BLOCKED) {
         finalStatus = IN_PROGRESS;
     }
-    const newPriorityScore = priorityScore(combinedTaskData);
+    const newPriorityScore = priorityScore(combinedTaskData, allExistingTasks);
     const updatedTask = await prisma.task.update({
         where: { id: parseInt(id) },
         data: {
@@ -117,7 +117,7 @@ const updateTask = async (req, res) => {
             description: description ? description : "",
             priority: priority,
             deadline: deadline,
-            status: status,
+            status: finalStatus,
             size: size,
             priorityScore: newPriorityScore,
             canStart: currentCanStart,
@@ -142,7 +142,9 @@ const deleteTask = async (req, res) => {
         select: { id: true, title: true }
     })
     if (dependentTasks.length > 0) {
-        return res.status(400).json()
+        return res.status(400).json({
+            dependentTasks: dependentTasks
+        });
     }
     await prisma.task.delete({
         where: {
