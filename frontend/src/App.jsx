@@ -6,6 +6,7 @@ import Pomodoro from './components/Pomodoro';
 import Sidebar from './components/Sidebar';
 import TaskList from './components/TaskList';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
+import { requestNotificationPermission, registerServiceWorker, foregroundMessageHandler } from './notifications/notificationService';
 
 const PrivateRouter = ({ isLoggedIn }) => {
   if (!isLoggedIn) {
@@ -21,8 +22,18 @@ function App() {
     if (token) {
       setIsLoggedIn(true);
     }
-  }, []);
-  return(
+    const initializeNotifications = async () => {
+      registerServiceWorker();
+      if (isLoggedIn) {
+        await requestNotificationPermission();
+        foregroundMessageHandler((notification) => {
+          console.log('Notification received:', notification);
+        });
+      }
+    };
+    initializeNotifications();
+  }, [isLoggedIn]);
+  return (
     <Router>
       <Routes>
         <Route path="/" element={<SignUp />} />
