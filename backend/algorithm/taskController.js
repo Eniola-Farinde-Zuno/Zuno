@@ -135,7 +135,7 @@ const updateTask = async (req, res) => {
             description: description ? description : "",
             priority: priority,
             deadline: deadline,
-            status: status,
+            status: finalStatus,
             size: size,
             priorityScore: newPriorityScore,
             canStart: currentCanStart,
@@ -163,7 +163,9 @@ const deleteTask = async (req, res) => {
         select: { id: true, title: true }
     })
     if (dependentTasks.length > 0) {
-        return res.status(400).json()
+        return res.status(400).json({
+            dependentTasks: dependentTasks
+        });
     }
     await prisma.task.delete({
         where: {

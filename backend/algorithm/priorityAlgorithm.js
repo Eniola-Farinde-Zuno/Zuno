@@ -1,4 +1,7 @@
-const priorityScore = (task) => {
+const priorityScore = (task, allTasks = []) => {
+    if (task.canStart === false) {
+        return 0;
+    }
     ONE_DAY_IN_SECONDS = 1000 * 60 * 60 * 24;
     //weights for each category
     WI = 0.3;
@@ -13,6 +16,7 @@ const priorityScore = (task) => {
     const LOW_SCORE = 1;
     const SEVEN_DAYS = 7
     const ONE_DAY = 1
+    const DEPENDENCY_BOOST_PERCENTAGE = 20;
 
     //gets tasks from backend and assigns importance score based on priority chosen by user
     const importance = {
@@ -61,7 +65,15 @@ const priorityScore = (task) => {
         'LARGE': HIGH_SCORE,
     }[task.size];
 
-    const priority = (WI * importance + WD * urgency + WA * age + WS * size)
+    const basePriority = (WI * importance + WD * urgency + WA * age + WS * size);
+    const dependentTasks = allTasks.length > 0 ?
+        allTasks.filter(t => t.dependencies && t.dependencies.includes(task.id)) :
+        [];
+    const hasDependencies = dependentTasks.length > 0;
+    const numberOfDependentTasks = hasDependencies ? dependentTasks.length : 0;
+    const priority = hasDependencies ?
+        basePriority * (1 + (DEPENDENCY_BOOST_PERCENTAGE / 100) * numberOfDependentTasks) :
+        basePriority;
     return parseFloat(priority.toFixed(2));
 
 };
