@@ -145,7 +145,7 @@ const TaskList = () => {
                     onDeleteTask={deleteTask}
                 />
             )}
-            <button onClick={openModal}> Add Task</button>
+            <button onClick={openModal} className="add-task"> + Add Task</button>
             <Modal
                 isOpen={isModalOpen}
                 onClose={closeModal}

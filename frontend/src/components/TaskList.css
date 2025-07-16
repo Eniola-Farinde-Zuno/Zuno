@@ -156,3 +156,12 @@
 .task-controls h1 {
     margin: 0;
 }
+.add-task {
+    background: none;
+    color: #000;
+    align-items: left;
+}
+.add-task:hover{
+    text-decoration: underline;
+    color: #555;
+}
