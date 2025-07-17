@@ -1,5 +1,7 @@
 const admin = require('firebase-admin');
 const serviceAccount = require('./zuno-5b834-firebase-adminsdk-fbsvc-82871f9cc6.json');
+const { PrismaClient } = require('../generated/prisma');
+const prisma = new PrismaClient();
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
