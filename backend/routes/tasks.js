@@ -15,4 +15,6 @@ router.put('/task/:id', authenticateToken, validateTask, taskController.updateTa
 
 router.get('/task/all', authenticateToken, taskController.getSortedTasks);
 
+router.post('/task/:taskId/complete', authenticateToken, taskController.completeTask);
+
 module.exports = router
