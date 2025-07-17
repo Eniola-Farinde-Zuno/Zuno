@@ -7,7 +7,7 @@ const STORAGE_BUCKET = import.meta.env.VITE_STORAGE_BUCKET;
 const MESSAGING_SENDER_ID = import.meta.env.VITE_MESSAGING_SENDER_ID;
 const APP_ID = import.meta.env.VITE_APP_ID;
 const MEASUREMENT_ID = import.meta.env.VITE_MEASUREMENT_ID;
-URL_PREFIX = "http://localhost:5000/api"
+const URL_PREFIX = "http://localhost:5000/api"
 
 
 const firebaseConfig = {

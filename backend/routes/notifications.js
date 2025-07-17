@@ -4,7 +4,7 @@ const authenticateToken = require('../validation/authMiddleware');
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const { sendNotificationToUser } = require('../notification/notification');
-const MESSAGES = require('../constants/messages');
+const MESSAGES = require('../messages/messages');
 
 router.post('/token', authenticateToken, async (req, res) => {
     const { token } = req.body;
