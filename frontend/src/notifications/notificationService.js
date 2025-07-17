@@ -24,13 +24,7 @@ const messaging = getMessaging(app);
 
 export const registerServiceWorker = () => {
   if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/firebase-messaging-sw.js')
-    .then((registration) => {
-      console.log('Service Worker registered with scope:', registration.scope);
-    })
-    .catch((error) => {
-      console.error('Service Worker registration failed:', error);
-    });
+    return navigator.serviceWorker.register('/firebase-messaging-sw.js')
   }
 }
 
@@ -38,30 +32,26 @@ export const  getFCMToken = async () => {
   const currentToken = await getToken(messaging, {
     vapidKey: VAPID_KEY,
   })
-  if (currentToken) {
-    console.log('FCM Token:', currentToken);
-  } else {
-    console.log('No registration token available.');
-  }
+  return currentToken || null;
 }
 
 export const requestNotificationPermission = async () => {
   const permission = await Notification.requestPermission();
   if (permission === 'granted') {
-    console.log('Notification permission granted.');
     await getFCMToken();
-  } else {
-    console.log('Notification permission denied.');
   }
 }
 
 export const foregroundMessageHandler = (callback) => {
-  onMessage(messaging, (payload) => {
-    console.log("Message received in foreground:", payload);
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-      body: payload.notification.body,
-    };
-    new Notification(notificationTitle, notificationOptions);
+  return onMessage(messaging, (payload) => {
+    if (callback && typeof callback === 'function') {
+      callback(payload);
+    } else {
+      const notificationTitle = payload.notification?.title || 'New notification';
+      const notificationOptions = {
+        body: payload.notification?.body || '',
+      };
+      new Notification(notificationTitle, notificationOptions);
+    }
   });
 }
