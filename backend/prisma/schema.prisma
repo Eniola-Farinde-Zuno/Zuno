@@ -21,6 +21,7 @@ model User {
   email     String  @unique
   password  String
   tasks     Task[]
+  fcmTokens FcmToken[]
 }
 
 enum priority {
@@ -58,5 +59,14 @@ model Task {
   createdAt     DateTime @default(now())
   priorityScore Float @default(0.0)
   canStart      Boolean  @default(true)
-  dependencies  Int[] ?
+  dependencies  Int[]
+}
+
+model FcmToken {
+  id        Int        @id @default(autoincrement())
+  token     String     @unique
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
