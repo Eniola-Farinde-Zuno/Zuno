@@ -43,6 +43,24 @@
 .notification-body p {
   margin: 0;
   font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.notification-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.action-button {
+  background-color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .notifications-container {

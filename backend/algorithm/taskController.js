@@ -94,7 +94,7 @@ const addTask = async (req, res) => {
 const updateTask = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
-    const { title, description, priority, deadline, status, size, dependencies } = req.body;
+    const { title, description, priority, deadline, size, dependencies } = req.body;
     const existingTask = await prisma.task.findUnique({
         where: { id: parseInt(id) }
     });
@@ -183,7 +183,7 @@ const deleteTask = async (req, res) => {
 const completeTask = async (req, res) => {
     const userId = req.user.id;
     const { taskId } = req.params;
-    const taskToComplete = await prisma.task.findUnique({
+    await prisma.task.findUnique({
         where: { id: parseInt(taskId), userId: userId }
     });
     const updatedTask = await prisma.task.update({
@@ -200,9 +200,34 @@ const completeTask = async (req, res) => {
     const data = {
         type: "task_completion",
         taskId: updatedTask.id.toString(),
-        taskTitle: updatedTask.title || 'N/A'
+        taskTitle: updatedTask.title || 'N/A',
+        actions: JSON.stringify([
+            {
+                action: 'undo',
+                title: 'Undo',
+                icon: '/undo-icon.png'
+            }
+        ])
     };
     await sendNotificationToUser(userId, title, body, data);
+    return res.status(200).json({ task: updatedTask });
+};
+
+const undoCompleteTask = async (req, res) => {
+    const userId = req.user.id;
+    const { taskId } = req.params;
+    await prisma.task.findUnique({
+        where: { id: parseInt(taskId), userId: userId }
+    });
+    const updatedTask = await prisma.task.update({
+        where: { id: parseInt(taskId), userId: userId },
+        data: {
+            status: IN_PROGRESS,
+        }
+    });
+
+    await updateCanStart(prisma, userId);
+    invalidateUserCache(userId);
     return res.status(200).json({ task: updatedTask });
 };
 
@@ -212,4 +237,5 @@ module.exports = {
     updateTask,
     deleteTask,
     completeTask,
+    undoCompleteTask,
 };

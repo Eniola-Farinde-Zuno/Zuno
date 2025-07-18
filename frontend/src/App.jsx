@@ -47,19 +47,41 @@ function App() {
           {
             id: Date.now(),
             title: payload.notification?.title || 'New Notification',
-            body: payload.notification?.body || ''
+            body: payload.notification?.body || '',
+            data: payload.data || {}
           }
           , ...prev
         ]);
       });
     };
+    const handleServiceWorkerMessage = async (event) => {
+      if (event.data && event.data.type === 'UNDO_TASK') {
+        const taskId = event.data.taskId;
+        if (taskId) {
+          await api.task.undoComplete(taskId);
+          window.dispatchEvent(new CustomEvent('refresh-tasks'));
+        }
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
     initializeNotifications().then(() => {
       setupMessageHandler();
     });
+    const checkUrlForUndoAction = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const undoTaskId = urlParams.get('undo');
+      if (undoTaskId) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        api.task.undoComplete(undoTaskId)
+      }
+    };
+    const urlCheckTimeout = setTimeout(checkUrlForUndoAction, 1000);
     return () => {
       if (unsubscribeOnMessage) {
         unsubscribeOnMessage();
       }
+      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      clearTimeout(urlCheckTimeout);
     };
   }, []);
 
