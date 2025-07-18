@@ -24,6 +24,13 @@ const TaskList = () => {
 
     useEffect(() => {
         fetchTasks();
+        const handleRefreshTasks = () => {
+            fetchTasks();
+        };
+        window.addEventListener('refresh-tasks', handleRefreshTasks);
+        return () => {
+            window.removeEventListener('refresh-tasks', handleRefreshTasks);
+        };
     }, []);
     const handleInput = (e) => {
         const { name, value } = e.target;
@@ -93,24 +100,20 @@ const TaskList = () => {
         await fetchTasks();
     };
     const filteredTasks = tasks.filter(task => showCompleted ? task.status === COMPLETED : task.status !== COMPLETED);
-    const toggleCheckbox =  async (checkedTask) => {
-        const newStatus = checkedTask.status === COMPLETED ? IN_PROGRESS : COMPLETED;
-        const updatedData = { ...checkedTask, status: newStatus, deadline: checkedTask.deadline, dependencies: checkedTask.dependencies };
-        await task.update(checkedTask.id, updatedData);
-        if (newStatus === COMPLETED) {
-            const dependentTasks = tasks.filter(t =>
-                t.dependencies?.includes(checkedTask.id)
-            );
-
-            for (const dependentTask of dependentTasks) {
-                const newDependencies = dependentTask.dependencies.filter(
-                    depId => depId !== checkedTask.id
-                );
-                await task.update(dependentTask.id, {
-                    ...dependentTask,
-                    dependencies: newDependencies
-                });
-            }
+const toggleCheckbox = async (checkedTask) => {
+        if (checkedTask.status !== COMPLETED) {
+            await task.complete(checkedTask.id);
+        } else {
+            const updatedData = {
+                title: checkedTask.title,
+                description: checkedTask.description || "",
+                priority: checkedTask.priority,
+                status: IN_PROGRESS,
+                deadline: checkedTask.deadline,
+                size: checkedTask.size || "NONE",
+                dependencies: checkedTask.dependencies || []
+            };
+            await task.update(checkedTask.id, updatedData);
         }
         await fetchTasks();
     }

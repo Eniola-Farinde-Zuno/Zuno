@@ -49,4 +49,32 @@ export const task = {
     delete: (taskId) => apiFetch(`/task/${taskId}`, {
         method: 'DELETE',
     }),
+    complete: (taskId) => apiFetch(`/task/${taskId}/complete`, {
+        method: 'POST',
+    }),
+    undoComplete: (taskId) => apiFetch(`/task/${taskId}/undo-complete`, {
+        method: 'POST',
+    }),
+};
+
+export const notifications = {
+  registerToken: (token) => {
+    return apiFetch('/notification/token', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    })
+  },
+  getAll: () => apiFetch('/notification/all', {
+    method: 'GET',
+  }),
+  markAsRead: (notificationId) => apiFetch(`/notification/${notificationId}/read`, {
+    method: 'PUT',
+  }),
+  markAllAsRead: () => apiFetch('/notification/read-all', {
+    method: 'PUT',
+  }),
+  send: (notificationData) => apiFetch('/notification/send', {
+    method: 'POST',
+    body: JSON.stringify(notificationData),
+  }),
 };

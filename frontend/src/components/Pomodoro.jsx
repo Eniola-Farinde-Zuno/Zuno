@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import { faPause } from '@fortawesome/free-solid-svg-icons';
 import utils from '../utils/utils';
+import { focusCompletion, breakCompletion, pomodoroAction} from '../utils/notificationUtils';
 
 
 const Pomodoro = () => {
@@ -38,6 +39,35 @@ const Pomodoro = () => {
     useEffect(() => { localStorage.setItem('isFocus', isTimer && mode === 'focus'); }, [isTimer, mode]);
     useEffect(() => { localStorage.setItem('isBreak', isTimer && mode === 'break'); }, [isTimer, mode]);
     useEffect(() => { localStorage.setItem('mode', mode); }, [mode]);
+    useEffect(() => {
+        const handlePomodoroAction = (event) => {
+            const { action } = event.detail;
+            pomodoroAction(action, { setFocusTime, setBreakTime, setMode, setIsTimer, focusTime, breakTime, mode, SECS_IN_MIN});
+        };
+
+        const handleServiceWorkerMessage = (event) => {
+            if (event.data && event.data.type === 'POMODORO_ACTION') {
+                pomodoroAction(event.data.action, { setFocusTime, setBreakTime, setMode, setIsTimer, focusTime, breakTime, mode, SECS_IN_MIN});
+            }
+        };
+        const checkUrlForAction = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            if (action) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                pomodoroAction(action, { setFocusTime, setBreakTime, setMode, setIsTimer, focusTime, breakTime, mode, SECS_IN_MIN });
+            }
+        };
+        window.addEventListener('pomodoro-action', handlePomodoroAction);
+        navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+        const urlCheckTimeout = setTimeout(checkUrlForAction, 500);
+
+        return () => {
+            window.removeEventListener('pomodoro-action', handlePomodoroAction);
+            navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+            clearTimeout(urlCheckTimeout);
+        };
+    }, [focusTime, breakTime, mode]);
 
     useEffect(() => {
         if (isTimer) {
@@ -51,6 +81,7 @@ const Pomodoro = () => {
                             clearInterval(interval.current);
                             setIsTimer(false);
                             setCycles(cycles + 1);
+                            focusCompletion(25 * SECS_IN_MIN);
                             return 0;
                         }
                         return prevTime - 1;
@@ -60,6 +91,7 @@ const Pomodoro = () => {
                         if (prevTime <= 1) {
                             clearInterval(interval.current);
                             setIsTimer(false);
+                            breakCompletion(5 * SECS_IN_MIN);
                             return 0;
                         }
                         return prevTime - 1;

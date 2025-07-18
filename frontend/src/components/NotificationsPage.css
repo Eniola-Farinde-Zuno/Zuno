@@ -1,0 +1,199 @@
+.notifications-page {
+    display: flex;
+    min-height: 100vh;
+    background-color: #ffffff;
+    width: 100%;
+}
+
+.notification-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.notifications-content {
+    width: 100%;
+    max-width: 1000px;
+    background-color: #ffffff;
+    padding: 10px;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.notifications-header h1 {
+    margin: 0;
+    font-size: 28px;
+    color: #333;
+    font-weight: 700;
+}
+
+.mark-all-read-btn {
+    background: none;
+    border: none;
+    color: #000;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease-in-out;
+}
+
+.mark-all-read-btn:hover {
+    color: #555;
+    text-decoration: underline;
+}
+
+.notifications-tabs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+    width: 100%;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #888;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease-in-out;
+}
+
+.tab-btn.active {
+    color: #333;
+    font-weight: 600;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #000;
+    border-radius: 2px;
+}
+
+.tab-btn:hover:not(.active) {
+    color: #555;
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    background-color: white;
+    padding: 10px;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    position: relative;
+}
+
+.notification-item:hover {
+    background-color: #f9f9f9;
+}
+
+.notification-item.unread {
+    background-color: #ffffff;
+    border-bottom: #ccc 1px solid;
+    border-left: 4px solid #000;
+    padding-left: 6px;
+}
+
+.notification-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background-color: #ddd;
+    color: #000;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.notification-icon img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.notification-content {
+    flex: 1;
+    margin-top: -10px;
+}
+
+.notification-title {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 400;
+}
+
+.notification-body {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 0.8;
+}
+
+.notification-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.read-indicator {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    margin-left: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.notification-item.read .read-indicator {
+    background-color: #000;
+    border-color: #000;
+    color: white;
+}
+
+.read-indicator::after {
+    content: '✓';
+    font-size: 12px;
+    line-height: 1;
+    display: block;
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.notification-item.read .read-indicator::after {
+    opacity: 1;
+    transform: scale(1);
+}

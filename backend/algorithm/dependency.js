@@ -7,10 +7,7 @@ const canStart = (task, tasks) => {
     }
     for (const depId of task.dependencies) {
         const dependentTask = tasks.find(t => t.id === depId);
-        if (!dependentTask) {
-            return false;
-        }
-        if (dependentTask.status !== COMPLETED) {
+        if (!dependentTask || dependentTask.status !== COMPLETED) {
             return false;
         }
     }
@@ -57,8 +54,10 @@ const circularDependency = async (taskData, existingTasks) => {
     return false;
 };
 // updating canStart and status fields
-const updateCanStart = async (prisma) => {
-    const tasks = await prisma.task.findMany();
+const updateCanStart = async (prisma, userId) => {
+    const tasks = await prisma.task.findMany({
+        where: { userId: userId }
+    });
     const updates = [];
     for (const task of tasks) {
         const currentCanStart = canStart(task, tasks);
@@ -66,10 +65,8 @@ const updateCanStart = async (prisma) => {
         if (task.status === BLOCKED && currentCanStart) {
             newStatus = IN_PROGRESS;
         }
-        else if (task.status !== BLOCKED && task.dependencies.length > 0) {
-            if (task.status !== COMPLETED) {
-                newStatus = BLOCKED;
-            }
+        else if (task.status !== BLOCKED && task.status !== COMPLETED && task.dependencies.length > 0 && !currentCanStart) {
+            newStatus = BLOCKED;
         }
         if (task.canStart !== currentCanStart || task.status !== newStatus) {
             updates.push(prisma.task.update({

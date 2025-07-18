@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, Navigate} from "react-router-dom";
 import logo from "../assets/zuno-sidebar-logo.png";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faTimes, faHouse, faClockRotateLeft, faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faTimes, faHouse, faClockRotateLeft, faArrowRightFromBracket, faBell } from "@fortawesome/free-solid-svg-icons";
 import "./Sidebar.css";
 
 const Sidebar = () => {
@@ -51,6 +51,12 @@ const Sidebar = () => {
                                     </Link>
                                 </li>
                                 <li>
+                                    <Link to="/notifications" className="sidebar-nav-item" onClick={closeSidebar}>
+                                        <h1><FontAwesomeIcon icon={faBell} /> Notifications</h1>
+                                    </Link>
+                                </li>
+
+                                <li>
                                     <Link to="/signin" className="sidebar-nav-item-logout" onClick={logout}>
                                         <h1><FontAwesomeIcon icon={faArrowRightFromBracket} /> Log Out</h1>
                                     </Link>
@@ -70,6 +76,11 @@ const Sidebar = () => {
                             <li>
                                 <Link to="/pomodoro" className="sidebar-nav-item" onClick={closeSidebar}>
                                     <FontAwesomeIcon icon={faClockRotateLeft} />
+                                </Link>
+                            </li>
+                            <li>
+                                <Link to="/notifications" className="sidebar-nav-item" onClick={closeSidebar}>
+                                    <FontAwesomeIcon icon={faBell} />
                                 </Link>
                             </li>
                             <li>
