@@ -64,6 +64,15 @@ model Task {
   dependencies  Int[]
 }
 
+model Pomodoro {
+  id         Int        @id @default(autoincrement())
+  focusCycle Int
+  breakCycle Int
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id])
+  createdAt  DateTime   @default(now())
+}
+
 model FcmToken {
   id        Int        @id @default(autoincrement())
   token     String     @unique

@@ -8,6 +8,7 @@ import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import { faPause } from '@fortawesome/free-solid-svg-icons';
 import utils from '../utils/utils';
 import { focusCompletion, breakCompletion, pomodoroAction} from '../utils/notificationUtils';
+import { pomodoro } from '../utils/api';
 
 
 const Pomodoro = () => {
@@ -31,14 +32,20 @@ const Pomodoro = () => {
         const savedMode = localStorage.getItem('mode');
         return savedMode || 'focus';
     });
-    const [cycles, setCycles] = useState(0);
+    const [cycles, setCycles] = useState(() => {
+        const savedCycles = localStorage.getItem('cycles');
+        return savedCycles ? parseInt(savedCycles, 10) : 0;
+    });
     const interval = useRef(null);
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user.id;
 
     useEffect(() => { localStorage.setItem('focusTime', focusTime.toString()); }, [focusTime]);
     useEffect(() => { localStorage.setItem('breakTime', breakTime.toString()); }, [breakTime]);
     useEffect(() => { localStorage.setItem('isFocus', isTimer && mode === 'focus'); }, [isTimer, mode]);
     useEffect(() => { localStorage.setItem('isBreak', isTimer && mode === 'break'); }, [isTimer, mode]);
     useEffect(() => { localStorage.setItem('mode', mode); }, [mode]);
+    useEffect(() => { localStorage.setItem('cycles', cycles.toString()); }, [cycles]);
     useEffect(() => {
         const handlePomodoroAction = (event) => {
             const { action } = event.detail;
@@ -82,6 +89,11 @@ const Pomodoro = () => {
                             setIsTimer(false);
                             setCycles(cycles + 1);
                             focusCompletion(25 * SECS_IN_MIN);
+                            if (userId) {
+                                pomodoro.add({
+                                    focusCycle: 25,
+                                })
+                            }
                             return 0;
                         }
                         return prevTime - 1;
