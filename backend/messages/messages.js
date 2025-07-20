@@ -6,6 +6,8 @@ const MESSAGES = {
   TASK_DELETED: "Task deleted successfully",
   TASK_UPDATED: "Task updated successfully",
   CIRCULAR_DEPENDENCY: "Circular dependency detected",
+  TOKEN_SAVED: "Token saved successfully",
+  NOTIFICATION_SENT: "Notification sent successfully",
 };
 
 module.exports = MESSAGES;

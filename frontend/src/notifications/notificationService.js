@@ -7,6 +7,7 @@ const STORAGE_BUCKET = import.meta.env.VITE_STORAGE_BUCKET;
 const MESSAGING_SENDER_ID = import.meta.env.VITE_MESSAGING_SENDER_ID;
 const APP_ID = import.meta.env.VITE_APP_ID;
 const MEASUREMENT_ID = import.meta.env.VITE_MEASUREMENT_ID;
+const URL_PREFIX = "http://localhost:5000/api"
 
 
 const firebaseConfig = {
@@ -28,7 +29,28 @@ export const registerServiceWorker = () => {
   }
 }
 
-export const  getFCMToken = async () => {
+export const sendTokenToServer = async(token, userId) => {
+  const response = await fetch(`${URL_PREFIX}/notification/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}` // Add auth header if needed
+    },
+    body: JSON.stringify({
+      userId,
+      token
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+export const getFCMToken = async () => {
   const currentToken = await getToken(messaging, {
     vapidKey: VAPID_KEY,
   })
