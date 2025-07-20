@@ -4,6 +4,7 @@ const { priorityScore } = require('./priorityAlgorithm');
 const MESSAGES = require('../messages/messages');
 const { canStart, circularDependency, updateCanStart } = require('./dependency');
 const { getCacheKey, setCache, getCache, invalidateUserCache } = require('../utils/cache');
+const { sendNotificationToUser } = require('../notification/notification');
 
 const BLOCKED = 'BLOCKED';
 const IN_PROGRESS = 'IN_PROGRESS';
@@ -101,11 +102,11 @@ const updateTask = async (req, res) => {
         ...existingTask,
         ...req.body,
         createdAt: existingTask.createdAt,
-        dependencies: dependencies || existingTask.dependencies,
+        dependencies: dependencies !== undefined ? dependencies.map(Number) : existingTask.dependencies,
     }
     const allExistingTasks = await prisma.task.findMany({
         where: {
-            userId: req.user.id
+            userId: userId
         },
         select: {
             id: true,
@@ -113,7 +114,7 @@ const updateTask = async (req, res) => {
             status: true
         }
     });
-    const isCircular = await circularDependency(combinedTaskData, allExistingTasks);
+    const isCircular = circularDependency(combinedTaskData, allExistingTasks);
     if (isCircular) {
         return res.status(400).json({ message: MESSAGES.CIRCULAR_DEPENDENCY });
     }
@@ -125,11 +126,11 @@ const updateTask = async (req, res) => {
         finalStatus = IN_PROGRESS;
     }
     const tasksForPriorityCalculation = allExistingTasks.map(task =>
-        task.id === parseInt(id) ? { ...task, ...combinedTaskData } : task
+        task.id === parseInt(id) ? { ...task, ...combinedTaskData, status: finalStatus } : task
     );
     const newPriorityScore = priorityScore(combinedTaskData, tasksForPriorityCalculation);
     const updatedTask = await prisma.task.update({
-        where: { id: parseInt(id) },
+        where: { id: parseInt(id), userId: userId },
         data: {
             title: title,
             description: description ? description : "",
@@ -144,7 +145,7 @@ const updateTask = async (req, res) => {
     });
     const dependenciesModified = dependencies !== undefined && JSON.stringify(dependencies) !== JSON.stringify(existingTask.dependencies);
     if (updatedTask.status === COMPLETED || dependenciesModified) {
-        await updateCanStart(prisma);
+        await updateCanStart(prisma, userId);
     }
     //invalidate cache after updating task
     invalidateUserCache(userId);
@@ -156,6 +157,7 @@ const deleteTask = async (req, res) => {
     const userId = req.user.id;
     const dependentTasks = await prisma.task.findMany({
         where: {
+            userId: userId,
             dependencies: {
                 has: parseInt(id)
             }
@@ -169,13 +171,39 @@ const deleteTask = async (req, res) => {
     }
     await prisma.task.delete({
         where: {
-            id: parseInt(id)
+            id: parseInt(id),
+            userId: userId
         }
     });
-    await updateCanStart(prisma);
+    await updateCanStart(prisma, userId);
     //invalidate cache after deleting task
     invalidateUserCache(userId);
     res.json({ message: MESSAGES.TASK_DELETED});
+};
+const completeTask = async (req, res) => {
+    const userId = req.user.id;
+    const { taskId } = req.params;
+    const taskToComplete = await prisma.task.findUnique({
+        where: { id: parseInt(taskId), userId: userId }
+    });
+    const updatedTask = await prisma.task.update({
+        where: { id: parseInt(taskId), userId: userId },
+        data: {
+            status: COMPLETED,
+        }
+    });
+    await updateCanStart(prisma, userId);
+    invalidateUserCache(userId);
+    //send notification for task completion
+    const title = "Task Completed! 🎉";
+    const body = `You've successfully finished ${updatedTask.title}. Great work!`;
+    const data = {
+        type: "task_completion",
+        taskId: updatedTask.id.toString(),
+        taskTitle: updatedTask.title || 'N/A'
+    };
+    await sendNotificationToUser(userId, title, body, data);
+    return res.status(200).json({ task: updatedTask });
 };
 
 module.exports = {
@@ -183,4 +211,5 @@ module.exports = {
     addTask,
     updateTask,
     deleteTask,
+    completeTask,
 };

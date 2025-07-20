@@ -7,7 +7,6 @@ const STORAGE_BUCKET = import.meta.env.VITE_STORAGE_BUCKET;
 const MESSAGING_SENDER_ID = import.meta.env.VITE_MESSAGING_SENDER_ID;
 const APP_ID = import.meta.env.VITE_APP_ID;
 const MEASUREMENT_ID = import.meta.env.VITE_MEASUREMENT_ID;
-const URL_PREFIX = "http://localhost:5000/api"
 
 
 const firebaseConfig = {
@@ -29,26 +28,6 @@ export const registerServiceWorker = () => {
   }
 }
 
-export const sendTokenToServer = async(token, userId) => {
-  const response = await fetch(`${URL_PREFIX}/notification/token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}` // Add auth header if needed
-    },
-    body: JSON.stringify({
-      userId,
-      token
-    })
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
-  }
-
-  return await response.json();
-}
 
 export const getFCMToken = async () => {
   const currentToken = await getToken(messaging, {
@@ -66,13 +45,25 @@ export const requestNotificationPermission = async () => {
 
 export const foregroundMessageHandler = (callback) => {
   return onMessage(messaging, (payload) => {
+    const notificationTitle = payload.notification?.title || payload.data?.title || 'New Notification';
+    const notificationBody = payload.notification?.body || payload.data?.body || '';
+    const DEFAULT_NOTIFICATION_ICON = '../zuno-icon.jpg';
+
+    const notificationOptions = {
+      body: notificationBody,
+      icon: payload.notification?.icon || DEFAULT_NOTIFICATION_ICON,
+      data: payload.data,
+      tag: payload.data?.tag || 'default',
+      actions: [],
+    };
+
+    if (payload.data?.actions) {
+      notificationOptions.actions = JSON.parse(payload.data.actions);
+    }
+
     if (callback && typeof callback === 'function') {
       callback(payload);
     } else {
-      const notificationTitle = payload.notification?.title || 'New notification';
-      const notificationOptions = {
-        body: payload.notification?.body || '',
-      };
       new Notification(notificationTitle, notificationOptions);
     }
   });
