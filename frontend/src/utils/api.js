@@ -52,6 +52,9 @@ export const task = {
     complete: (taskId) => apiFetch(`/task/${taskId}/complete`, {
         method: 'POST',
     }),
+    undoComplete: (taskId) => apiFetch(`/task/${taskId}/undo-complete`, {
+        method: 'POST',
+    }),
 };
 
 export const notifications = {
