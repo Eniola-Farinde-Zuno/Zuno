@@ -9,8 +9,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 const NotificationsPage = () => {
     const [notificationsList, setNotificationsList] = useState([]);
     const [filter, setFilter] = useState('all');
+    const [isLoading, setIsLoading] = useState(true);
 
     const fetchNotifications = async () => {
+        setIsLoading(true);
         const data = await notifications.getAll();
         setNotificationsList(data || []);
     };
@@ -65,7 +67,7 @@ const NotificationsPage = () => {
                 <div className="notifications-content">
                     <div className="notifications-header">
                         <h1>Notifications</h1>
-                        {notificationsList.some(n => !n.isRead) && (
+                        {isLoading && notificationsList.some(n => !n.isRead) && (
                             <button className="mark-all-read-btn" onClick={handleMarkAllAsRead}> Mark all as read </button>
                         )}
                     </div>
@@ -73,7 +75,12 @@ const NotificationsPage = () => {
                         <button className={`tab-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}> All </button>
                         <button className={`tab-btn ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}> Unread </button>
                     </div>
-                    {filteredNotifications.length == 0 ? (
+                    {isLoading ? (
+                        <div className="loading-state">
+                            <div className="loading-spinner"></div>
+                            <p>Loading notifications...</p>
+                        </div>
+                    ) : filteredNotifications.length === 0 ? (
                         <div className='empty-state'>
                             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
                         </div>

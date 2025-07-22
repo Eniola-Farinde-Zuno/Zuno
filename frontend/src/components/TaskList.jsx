@@ -14,10 +14,12 @@ const TaskList = () => {
     const [newTask, setNewTask] = useState({ title: "", description: "", deadline: "", priority: "", status: "", size: "" });
     const [dependencies, setDependencies] = useState(null);
     const [showCompleted, setShowCompleted] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const IN_PROGRESS = "IN_PROGRESS";
     const COMPLETED = "COMPLETED";
 
     const fetchTasks = async () => {
+        setIsLoading(true);
         const data = await task.all();
         setTasks(data.sort((a, b) => b.priorityScore - a.priorityScore));
     };
@@ -138,8 +140,15 @@ const toggleCheckbox = async (checkedTask) => {
                 <h1>{showCompleted ? 'Completed Tasks' : 'Task List'}</h1>
                 <button onClick={() => setShowCompleted(!showCompleted)}>{showCompleted ? 'Show active tasks' : 'Show completed tasks'}</button>
             </div>
-            {filteredTasks.length === 0 ? (
-                <p>No tasks yet. Add a new task to get started!</p>
+            {isLoading ? (
+                <div className="loading-state">
+                    <div className="loading-spinner"></div>
+                    <p>Loading tasks...</p>
+                </div>
+            ) : filteredTasks.length === 0 ? (
+                <div className="empty-state">
+                    <p>{showCompleted ? 'No completed tasks yet' : 'No tasks yet. Add a new task to get started!'}</p>
+                </div>
             ) : (
                 <TaskTree
                     tasks={filteredTasks}
