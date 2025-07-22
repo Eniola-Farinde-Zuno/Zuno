@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import SignUp from './components/SignUp';
 import SignIn from './components/SignIn';
 import Pomodoro from './components/Pomodoro';
 import Sidebar from './components/Sidebar';
 import TaskList from './components/TaskList';
-import NotificationsPage from './components/NotificationsPage';
+import NotificationsPage from './notifications/NotificationsPage';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
-import Notification from './components/Notification';
+import Notification from './notifications/Notification';
 import { requestNotificationPermission, registerServiceWorker, foregroundMessageHandler, getFCMToken } from './notifications/notificationService';
+import { addNotification, processOfflineOperations } from './notifications/indexedDB';
 import * as api from './utils/api';
 
 const PrivateRouter = ({ isLoggedIn }) => {
@@ -20,6 +21,7 @@ const PrivateRouter = ({ isLoggedIn }) => {
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("token") ? true : false);
   const [notificationsList, setNotificationsList] = useState([]);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -28,32 +30,49 @@ function App() {
     const initializeNotifications = async () => {
       await registerServiceWorker();
       if (isLoggedIn) {
-        await requestNotificationPermission();
-      }
-      if (localStorage.getItem('token')) {
-        const permissionGranted = await requestNotificationPermission();
-        if (permissionGranted) {
+        const permissionStatus = await requestNotificationPermission();
+        if (permissionStatus) {
           const fcmToken = await getFCMToken();
           if (fcmToken) {
             await api.notifications.registerToken(fcmToken);
           }
         }
-      };
+      }
+    };
+
+    //process any pending offline operations when the app comes online
+    const syncOfflineOperations = async () => {
+      if (navigator.onLine && isLoggedIn) {
+        await processOfflineOperations(api.notifications);
+      }
     };
 
     let unsubscribeOnMessage;
     const setupMessageHandler = () => {
       unsubscribeOnMessage = foregroundMessageHandler((payload) => {
-        setNotificationsList(prev => [
-          {
-            id: Date.now(),
-            title: payload.notification?.title || 'New Notification',
-            body: payload.notification?.body || '',
-            data: payload.data || {}
-          }
-          , ...prev
-        ]);
+        //create notification object
+        const notification = {
+          id: Date.now(),
+          title: payload.notification?.title || 'New Notification',
+          body: payload.notification?.body || '',
+          data: payload.data || {},
+          timestamp: Date.now(),
+          read: false
+        };
+        setNotificationsList(prev => [notification, ...prev]);
+        //store in IndexedDB for offline access
+        if ('indexedDB' in window) {
+          addNotification(notification)
+        }
       });
+    };
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncOfflineOperations();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
     };
     // listener to handle messages received from the service worker
     const handleServiceWorkerMessage = async (event) => {
@@ -65,9 +84,18 @@ function App() {
         }
       }
     };
+    //add online/offline event listeners
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
     navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+
+    //initialize notifications and process any pending offline operations
     initializeNotifications().then(() => {
       setupMessageHandler();
+      if (navigator.onLine) {
+        syncOfflineOperations();
+      }
     });
     const checkUrlForUndoAction = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -83,6 +111,8 @@ function App() {
         unsubscribeOnMessage();
       }
       navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
       clearTimeout(urlCheckTimeout);
     };
   }, []);
@@ -116,6 +146,9 @@ function App() {
           />
         ))}
       </div>
+      {!isOnline && (
+        <div className='offline-msg'>You are offline.</div>
+      )}
     </>
   );
 }
