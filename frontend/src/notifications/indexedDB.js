@@ -45,6 +45,29 @@ export async function getAllStoredNotifications() {
     return allNotifications;
 }
 
+//function to mark a notification as read
+export async function markNotificationAsRead(notificationId) {
+    const db = await openIndexedDBClient();
+    const tx = db.transaction(STORE_NAME, 'readwrite'); //readwrite mode to allow updating the notification
+    const store = tx.objectStore(STORE_NAME);
+    //get the notification by ID
+    const getRequest = store.get(notificationId);
+    await new Promise((resolve, reject) => {
+        getRequest.onsuccess = () => {
+            const notification = getRequest.result;
+            if (notification) {
+                notification.read = true; //mark as read
+                const putRequest = store.put(notification);
+                putRequest.onsuccess = () => resolve();
+                putRequest.onerror = (e) => reject(e.target.error);
+            }
+        };
+        getRequest.onerror = (e) => reject(e.target.error);
+    });
+    await tx.done;
+    return true;
+}
+
 //function to add a notification to IndexedDB
 export async function addNotification(notification) {
     const db = await openIndexedDBClient();
@@ -129,11 +152,7 @@ export async function markOfflineOperationAsProcessed(operationId) {
 //function to process all pending offline operations
 export async function processOfflineOperations(apiNotifications) {
     const pendingOperations = await getPendingOfflineOperations();
-    console.log(`Processing ${pendingOperations.length} pending offline operations.`);
-
     let successCount = 0;
-    let failedCount = 0;
-
     for (const operation of pendingOperations) {
         switch (operation.type) {
             case 'markAsRead':
