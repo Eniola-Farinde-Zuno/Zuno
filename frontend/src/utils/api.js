@@ -91,3 +91,20 @@ export const pomodoro = {
         method: 'GET',
     }),
 }
+
+export const classes = {
+    getAll: () => apiFetch('/class/all', {
+        method: 'GET',
+    }),
+    add: (classData) => apiFetch('/class/add', {
+        method: 'POST',
+        body: JSON.stringify(classData),
+    }),
+    update: (classId, classData) => apiFetch(`/class/${classId}/update`, {
+        method: 'PUT',
+        body: JSON.stringify(classData),
+    }),
+    delete: (classId) => apiFetch(`/class/${classId}/delete`, {
+        method: 'DELETE',
+    }),
+}

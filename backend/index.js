@@ -8,6 +8,7 @@ const taskRoutes = require('./routes/tasks');
 const notificationRoutes  = require('./routes/notifications');
 const pomodoroRoutes = require('./routes/pomodoro');
 const { scheduleWeeklyNotifications } = require('./pomodoro/weeklyPomodoroNotification');
+const classRoutes = require('./routes/class');
 
 const app = express();
 app.use(cors());
@@ -17,9 +18,9 @@ app.use('/api/user', userRoutes);
 app.use('/api', taskRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api/pomodoro', pomodoroRoutes);
+app.use('/api/class', classRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on PORT: ${PORT}`);
     scheduleWeeklyNotifications();
 });
