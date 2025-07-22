@@ -19,7 +19,6 @@ const Sidebar = () => {
         }
     };
     const closeSidebar = () => {
-        setIsMinimized(false);
         setIsOpen(false);
     };
     const logout = () => {
