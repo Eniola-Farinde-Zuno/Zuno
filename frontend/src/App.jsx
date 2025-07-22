@@ -4,6 +4,7 @@ import SignIn from './components/SignIn';
 import Pomodoro from './components/Pomodoro';
 import Sidebar from './components/Sidebar';
 import TaskList from './components/TaskList';
+import NotificationsPage from './components/NotificationsPage';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Notification from './components/Notification';
 import { requestNotificationPermission, registerServiceWorker, foregroundMessageHandler, getFCMToken } from './notifications/notificationService';
@@ -95,6 +96,7 @@ function App() {
             <Route path="/sidebar" element={<Sidebar />} />
             <Route path="/pomodoro" element={<Pomodoro />} />
             <Route path="/tasklist" element={<TaskList setIsLoggedIn={setIsLoggedIn} />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
           <Route path="*" element={<Navigate to={isLoggedIn ? "/sidebar" : "/signin"} />} />
         </Routes>
@@ -106,6 +108,7 @@ function App() {
             key={notification.id}
             title={notification.title}
             body={notification.body}
+            data={notification.data}
             onClose={() => setNotificationsList(prev =>
               prev.filter(n => n.id !== notification.id)
             )}

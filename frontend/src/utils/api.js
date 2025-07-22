@@ -64,4 +64,17 @@ export const notifications = {
       body: JSON.stringify({ token }),
     })
   },
+  getAll: () => apiFetch('/notification/all', {
+    method: 'GET',
+  }),
+  markAsRead: (notificationId) => apiFetch(`/notification/${notificationId}/read`, {
+    method: 'PUT',
+  }),
+  markAllAsRead: () => apiFetch('/notification/read-all', {
+    method: 'PUT',
+  }),
+  send: (notificationData) => apiFetch('/notification/send', {
+    method: 'POST',
+    body: JSON.stringify(notificationData),
+  }),
 };

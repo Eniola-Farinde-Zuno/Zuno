@@ -24,6 +24,13 @@ const TaskList = () => {
 
     useEffect(() => {
         fetchTasks();
+        const handleRefreshTasks = () => {
+            fetchTasks();
+        };
+        window.addEventListener('refresh-tasks', handleRefreshTasks);
+        return () => {
+            window.removeEventListener('refresh-tasks', handleRefreshTasks);
+        };
     }, []);
     const handleInput = (e) => {
         const { name, value } = e.target;

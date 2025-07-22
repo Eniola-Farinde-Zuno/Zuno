@@ -8,6 +8,16 @@ admin.initializeApp({
 });
 
 async function sendNotificationToUser(userId, title, body, data = {}) {
+  await prisma.notification.create({
+    data: {
+      title,
+      body,
+      data: data ? JSON.stringify(data) : null,
+      userId: parseInt(userId),
+      isRead: false
+    }
+  });
+
   const fcmTokens = await prisma.fcmToken.findMany({
     where: { userId },
     select: { token: true }
@@ -30,12 +40,18 @@ async function sendNotificationToUser(userId, title, body, data = {}) {
 
   if (response.failureCount > 0) {
     const invalidTokens = response.responses
-      .filter((resp, idx) => !resp.success && [
-        'messaging/invalid-registration-token',
-        'messaging/registration-token-not-registered',
-        'messaging/mismatched-sender-id'
-      ].includes(resp.error.code))
-      .map((_, idx) => tokensToSend[idx]);
+      .filter((resp, index) => {
+        const isInvalid = !resp.success && [
+          'messaging/invalid-registration-token',
+          'messaging/registration-token-not-registered',
+          'messaging/mismatched-sender-id'
+        ].includes(resp.error.code);
+        if (isInvalid) {
+          resp.originalIndex = index;
+        }
+        return isInvalid;
+      })
+      .map(resp => tokensToSend[resp.originalIndex]);
 
     if (invalidTokens.length > 0) {
       await prisma.fcmToken.deleteMany({
