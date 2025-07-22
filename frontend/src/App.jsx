@@ -55,8 +55,9 @@ function App() {
         ]);
       });
     };
+    // listener to handle messages received from the service worker
     const handleServiceWorkerMessage = async (event) => {
-      if (event.data && event.data.type === 'UNDO_TASK') {
+      if (event.data && event.data.type === 'UNDO_TASK') { // if message is of type 'UNDO_TASK' then send a request to the server to undo the task
         const taskId = event.data.taskId;
         if (taskId) {
           await api.task.undoComplete(taskId);

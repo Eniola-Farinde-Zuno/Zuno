@@ -30,9 +30,11 @@ messaging.onBackgroundMessage((payload) => {
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+//logic to handle action buttons in notification
 self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    if (event.action === 'undo') {
+    event.notification.close(); //close notification when buttion is clicked
+    if (event.action === 'undo') { // If the 'undo' button is clicked, send an 'UNDO_TASK' message to App.jsx where the listener is defined
+        // which will then trigger an API call to the backend's taskController to undo the task.
         const taskId = event.notification.data?.taskId;
         if (!taskId) return;
         event.waitUntil(
@@ -54,7 +56,7 @@ self.addEventListener('notificationclick', (event) => {
             })()
         );
     }
-    else if (event.notification.data?.type === 'pomodoro_completion') {
+    else if (event.notification.data?.type === 'pomodoro_completion') { //if the notification is pomodoro completion
         const pomodoroAction = event.action;
         event.waitUntil(
             (async () => {
