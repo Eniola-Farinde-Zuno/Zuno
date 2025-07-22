@@ -78,3 +78,16 @@ export const notifications = {
     body: JSON.stringify(notificationData),
   }),
 };
+
+export const pomodoro = {
+    add: (cycleData) => apiFetch('/pomodoro', {
+        method: 'POST',
+        body: JSON.stringify(cycleData),
+    }),
+    getAll: () => apiFetch('/pomodoro/all', {
+        method: 'GET',
+    }),
+    getWeekly: () => apiFetch('/pomodoro/weekly', {
+        method: 'GET',
+    }),
+}
