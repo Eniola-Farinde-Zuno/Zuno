@@ -24,6 +24,7 @@ model User {
   fcmTokens     FcmToken[]
   notifications Notification[]
   pomodoro      Pomodoro[]
+  class         Class[]
 }
 
 enum priority {
@@ -46,6 +47,12 @@ enum size {
   SMALL
   MEDIUM
   LARGE
+}
+
+enum difficulty {
+  EASY
+  MEDIUM
+  HARD
 }
 
 model Task {
@@ -91,4 +98,18 @@ model Notification {
   userId    Int
   user      User      @relation(fields: [userId], references: [id])
   createdAt DateTime  @default(now())
+}
+
+model Class {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id])
+  days         String[]
+  startTime    String
+  endTime      String
+  topics       String[]
+  difficulty   difficulty
 }
