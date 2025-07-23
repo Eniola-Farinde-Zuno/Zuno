@@ -1,5 +1,25 @@
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+const DB_NAME = 'zuno-notification-db';
+const DB_VERSION = 1;
+const STORE_NAME = 'received-notifications';
+//function to open IndexedDB
+function openIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = event => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                objectStore.createIndex('read', 'read', { unique: false });
+            }
+        };
+        request.onsuccess = event => {
+            resolve(event.target.result);
+        };
+    });
+}
 
 const firebaseConfig = {
     apiKey: "AIzaSyCy6TRqBVhNElax84m7q7ZjJuTMVLpIPc8",
@@ -27,7 +47,41 @@ messaging.onBackgroundMessage((payload) => {
         notificationOptions.actions = JSON.parse(payload.data.actions);
     }
 
-    return self.registration.showNotification(notificationTitle, notificationOptions);
+    //function to store notification in IndexedDB and show notification
+    const storeAndShowNotification = async () => {
+        let notificationId;
+        const dbInstance = await openIndexedDB();
+            const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            const notificationRecord = {
+                title: notificationTitle,
+                body: notificationOptions.body,
+                icon: notificationOptions.icon,
+                data: notificationOptions.data,
+                actions: notificationOptions.actions,
+                timestamp: Date.now(),
+                read: false
+            };
+
+            const addRequest = store.add(notificationRecord);
+            await new Promise((resolve, reject) => {
+                addRequest.onsuccess = (e) => {
+                    notificationId = e.target.result;
+                    resolve();
+                };
+                addRequest.onerror = (e) => reject(e.target.error);
+            });
+            await tx.done;
+            const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'NEW_NOTIFICATION_RECEIVED',
+                    notification: { ...notificationRecord, id: notificationId }
+                });
+            });
+        return self.registration.showNotification(notificationTitle, notificationOptions);
+    };
+    return storeAndShowNotification();
 });
 
 //logic to handle action buttons in notification
@@ -78,10 +132,6 @@ self.addEventListener('notificationclick', (event) => {
                     if (newWindow) newWindow.focus();
                 }
             })()
-        );
-    } else {
-        event.waitUntil(
-            self.clients.openWindow('/tasklist')
         );
     }
 });
