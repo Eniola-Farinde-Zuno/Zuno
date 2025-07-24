@@ -1,4 +1,31 @@
 import { notifications as apiNotifications } from './api';
+import { openIndexedDBClient } from '../notifications/indexedDB';
+export const shouldDisplayNotificationPopups = async () => {
+    const notificationsDisabledInLocalStorage = localStorage.getItem('notifications_disabled') === 'true';
+    if (notificationsDisabledInLocalStorage) {
+        return false;
+    }
+    const db = await openIndexedDBClient();
+    const tx = db.transaction('notification-settings', 'readonly');
+    const store = tx.objectStore('notification-settings');
+    const request = store.get('notification-preference');
+    const preference = await new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (event) => reject(event.target.error);
+    });
+
+    if (preference) {
+        if (!preference.isEnabled) {
+            localStorage.setItem('notifications_disabled', 'true');
+        } else {
+            localStorage.removeItem('notifications_disabled');
+        }
+        return preference.isEnabled;
+    }
+
+
+};
+
 
 export const focusCompletion = async (duration) => {
     const title = "Focus Session Complete! 🎉";
@@ -13,7 +40,8 @@ export const focusCompletion = async (duration) => {
             title: 'Take a Break'
         }
     ];
-    if (Notification.permission === "granted") {
+    const displayPopup = await shouldDisplayNotificationPopups();
+    if (Notification.permission === "granted" && displayPopup) {
         new Notification(title, {
             body: body,
             icon: '/zuno-logo.png'
@@ -48,7 +76,8 @@ export const breakCompletion = async (duration) => {
             title: 'Add 5 Minutes'
         }
     ];
-    if (Notification.permission === "granted") {
+    const displayPopup = await shouldDisplayNotificationPopups();
+    if (Notification.permission === "granted" && displayPopup) {
         new Notification(title, {
             body: body,
         });

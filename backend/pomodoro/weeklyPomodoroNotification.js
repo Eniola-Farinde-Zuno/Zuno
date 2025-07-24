@@ -69,7 +69,7 @@ const scheduleWeeklyNotifications = () => {
   cron.schedule('0 6 * * 0', () => {
     sendWeeklyNotifications();
   }, {
-    timezone: "America/New_York"
+    timezone: "America/Los_Angeles"
   });
 };
 

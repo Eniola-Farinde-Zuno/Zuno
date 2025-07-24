@@ -68,3 +68,20 @@ export const foregroundMessageHandler = (callback) => {
     }
   });
 }
+
+//function to check notification status
+export const checkNotificationStatus = async () => {
+  const status = {
+    serviceWorkerSupported: 'serviceWorker' in navigator,
+    serviceWorkerRegistered: false,
+    notificationPermission: Notification.permission,
+    fcmTokenAvailable: false
+  };
+  if (status.serviceWorkerSupported) {
+    const registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+    status.serviceWorkerRegistered = !!registration;
+  }
+  const token = await getFCMToken();
+  status.fcmTokenAvailable = !!token;
+  return status;
+}

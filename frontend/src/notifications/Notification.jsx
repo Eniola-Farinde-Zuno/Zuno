@@ -4,15 +4,23 @@ import { task } from '../utils/api';
 
 const Notification = ({ title, body, onClose, data }) => {
     const [visible, setVisible] = useState(true);
+    const [notificationsDisabled, setNotificationsDisabled] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setVisible(false);
-            setTimeout(onClose, 300);
-        }, 5000);
+        const isDisabled = localStorage.getItem('notifications_disabled') === 'true';
+        setNotificationsDisabled(isDisabled);
+        if (!isDisabled) {
+            const timer = setTimeout(() => {
+                setVisible(false);
+                setTimeout(onClose, 300);
+            }, 5000);
 
-        return () => clearTimeout(timer);
+            return () => clearTimeout(timer);
+        }
     }, [onClose]);
+    if (notificationsDisabled) {
+        return null; //if notifications are disabled, don't show the notification
+    }
 
     const handleAction = async (action) => {
         if (action === 'undo' && data?.taskId) {
