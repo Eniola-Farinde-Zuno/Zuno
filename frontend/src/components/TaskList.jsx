@@ -22,6 +22,7 @@ const TaskList = () => {
         setIsLoading(true);
         const data = await task.all();
         setTasks(data.sort((a, b) => b.priorityScore - a.priorityScore));
+        setIsLoading(false);
     };
 
     useEffect(() => {
