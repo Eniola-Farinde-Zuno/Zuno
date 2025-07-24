@@ -1,7 +1,8 @@
 const DB_NAME = 'zuno-notification-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = 'received-notifications';
 const OFFLINE_OPERATIONS_STORE = 'offline-operations';
+const SETTINGS_STORE = 'notification-settings';
 
 export function openIndexedDBClient() {
     return new Promise((resolve, reject) => {
@@ -23,6 +24,13 @@ export function openIndexedDBClient() {
                 offlineStore.createIndex('timestamp', 'timestamp', { unique: false });
                 offlineStore.createIndex('type', 'type', { unique: false });
                 offlineStore.createIndex('processed', 'processed', { unique: false });
+            }
+            //create notification settings store if it doesn't exist
+            if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
+                const settingsStore = db.createObjectStore(SETTINGS_STORE, {
+                    keyPath: 'id'
+                });
+                settingsStore.createIndex('updatedAt', 'updatedAt', { unique: false });
             }
         };
         request.onsuccess = event => {
@@ -113,12 +121,14 @@ export async function getPendingOfflineOperations() {
     const db = await openIndexedDBClient();
     const tx = db.transaction(OFFLINE_OPERATIONS_STORE, 'readonly');
     const store = tx.objectStore(OFFLINE_OPERATIONS_STORE);
-    const index = store.index('processed');
 
     // Get all operations where processed = false
     const operations = await new Promise((resolve, reject) => {
-        const request = index.getAll(false);
-        request.onsuccess = () => resolve(request.result);
+        const request = store.getAll();
+        request.onsuccess = () => {
+            const unprocessedOperations = request.result.filter(op => op.processed === false);
+            resolve(unprocessedOperations);
+        };
         request.onerror = (e) => reject(e.target.error);
     });
 
@@ -136,14 +146,17 @@ export async function markOfflineOperationAsProcessed(operationId) {
         request.onsuccess = () => resolve(request.result);
         request.onerror = (e) => reject(e.target.error);
     });
-    //mark as processed
-    operation.processed = true;
-    //update in IndexedDB
-    await new Promise((resolve, reject) => {
-        const request = store.put(operation);
-        request.onsuccess = () => resolve();
-        request.onerror = (e) => reject(e.target.error);
-    });
+
+    if (operation) {
+        //mark as processed
+        operation.processed = true;
+        //update in IndexedDB
+        await new Promise((resolve, reject) => {
+            const request = store.put(operation); // Use put to update existing record
+            request.onsuccess = () => resolve();
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
 
     await tx.done;
     return true;

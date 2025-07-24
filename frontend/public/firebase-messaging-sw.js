@@ -1,8 +1,9 @@
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 const DB_NAME = 'zuno-notification-db';
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 const STORE_NAME = 'received-notifications';
+const SETTINGS_STORE = 'notification-settings';
 //function to open IndexedDB
 function openIndexedDB() {
     return new Promise((resolve, reject) => {
@@ -14,12 +15,63 @@ function openIndexedDB() {
                 objectStore.createIndex('timestamp', 'timestamp', { unique: false });
                 objectStore.createIndex('read', 'read', { unique: false });
             }
+            if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
+                const settingsStore = db.createObjectStore(SETTINGS_STORE, {
+                    keyPath: 'id'
+                });
+                settingsStore.createIndex('updatedAt', 'updatedAt', { unique: false });
+            }
         };
         request.onsuccess = event => {
             resolve(event.target.result);
         };
+        request.onerror = event => {
+            reject(event.target.error);
+        };
     });
 }
+//function to get notification preferences (simplified)
+async function getNotificationPreferences() {
+    const db = await openIndexedDB();
+    const tx = db.transaction(SETTINGS_STORE, 'readonly');
+    const store = tx.objectStore(SETTINGS_STORE);
+    const request = store.get('notification-preference');
+
+    const result = await new Promise((resolve) => {
+        request.onsuccess = () => {
+            const preference = request.result;
+            if (preference) {
+                resolve({
+                    isEnabled: preference.isEnabled
+                });
+            } else {
+                resolve({
+                    isEnabled: true
+                });
+            }
+        };
+        request.onerror = () => {
+            resolve({
+                isEnabled: true
+            });
+        };
+    });
+    await tx.done;
+    const notificationsDisabled = localStorage.getItem('notifications_disabled') === 'true';
+    if (notificationsDisabled) {
+        result.isEnabled = false;
+    }
+    return result;
+}
+async function areNotificationsEnabled() {
+    const prefs = await getNotificationPreferences();
+    return prefs.isEnabled;
+}
+
+async function shouldShowNotificationPopups() {
+    return areNotificationsEnabled();
+}
+
 
 const firebaseConfig = {
     apiKey: "AIzaSyCy6TRqBVhNElax84m7q7ZjJuTMVLpIPc8",
@@ -49,8 +101,10 @@ messaging.onBackgroundMessage((payload) => {
 
     //function to store notification in IndexedDB and show notification
     const storeAndShowNotification = async () => {
-        let notificationId;
-        const dbInstance = await openIndexedDB();
+        try {
+            const notificationsAreEnabledForDisplay = await areNotificationsEnabled();
+            let notificationId;
+            const dbInstance = await openIndexedDB();
             const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
             const store = tx.objectStore(STORE_NAME);
             const notificationRecord = {
@@ -73,13 +127,31 @@ messaging.onBackgroundMessage((payload) => {
             });
             await tx.done;
             const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-            clients.forEach(client => {
+            clients.forEach((client, index) => {
                 client.postMessage({
                     type: 'NEW_NOTIFICATION_RECEIVED',
-                    notification: { ...notificationRecord, id: notificationId }
+                    notification: { ...notificationRecord, id: notificationId },
+                    swDisplayedPopup: notificationsAreEnabledForDisplay
                 });
             });
-        return self.registration.showNotification(notificationTitle, notificationOptions);
+            if (notificationsAreEnabledForDisplay) {
+                const result = self.registration.showNotification(notificationTitle, notificationOptions);
+                return result;
+            } else {
+                return Promise.resolve();
+            }
+        } catch (error) {
+            try {
+                const preferences = await getNotificationPreferences();
+                if (preferences.isEnabled) {
+                    return self.registration.showNotification(notificationTitle, notificationOptions);
+                } else {
+                    return Promise.resolve();
+                }
+            } catch (fallbackError) {
+                return Promise.resolve();
+            }
+        }
     };
     return storeAndShowNotification();
 });
@@ -106,6 +178,8 @@ self.addEventListener('notificationclick', (event) => {
                         type: 'UNDO_TASK',
                         taskId: taskId
                     });
+                } else {
+                    await self.clients.openWindow(`/tasklist?undo=${taskId}`);
                 }
             })()
         );
@@ -134,4 +208,11 @@ self.addEventListener('notificationclick', (event) => {
             })()
         );
     }
+});
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(self.clients.claim());
 });

@@ -3,9 +3,10 @@ import Sidebar from '../components/Sidebar';
 import { notifications as apiNotifications } from '../utils/api';
 import './NotificationsPage.css';
 import { formatDistanceToNow } from 'date-fns';
-import { faList, faClock, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
+import { faList, faClock, faSyncAlt, faBell, faBellSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getAllStoredNotifications, markNotificationAsRead, openIndexedDBClient } from './indexedDB';
+import { checkNotificationStatus, requestNotificationPermission, getFCMToken } from './notificationService';
 
 const NotificationsPage = () => {
     const [notificationsList, setNotificationsList] = useState([]);
@@ -14,7 +15,75 @@ const NotificationsPage = () => {
     const [isSyncing, setIsSyncing] = useState(false);
     const [error, setError] = useState(null);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [notificationStatus, setNotificationStatus] = useState({
+        permission: 'default',
+        arePopupsEnabled: true
+    });
+    const [isToggling, setIsToggling] = useState(false);
     const STORE_NAME = 'received-notifications';
+    useEffect(() => {
+        const checkPermissionStatus = async () => {
+            const status = await checkNotificationStatus();
+            const notificationsDisabledInLocalStorage = localStorage.getItem('notifications_disabled') === 'true';
+            const finalStatus = {
+                permission: status.notificationPermission,
+                arePopupsEnabled: !notificationsDisabledInLocalStorage
+            };
+            setNotificationStatus(finalStatus);
+        };
+        checkPermissionStatus();
+    }, []);
+
+    const storeNotificationPreference = async (isEnabled) => {
+        const db = await openIndexedDBClient();
+        const tx = db.transaction('notification-settings', 'readwrite');
+        const store = tx.objectStore('notification-settings');
+        const preferenceData = {
+            id: 'notification-preference',
+            isEnabled: isEnabled,
+            updatedAt: Date.now()
+        };
+        await new Promise((resolve, reject) => {
+            const request = store.put(preferenceData);
+            request.onsuccess = () => resolve();
+            request.onerror = (event) => reject(event.target.error);
+        });
+        return true;
+    };
+
+    const handleShowNotifications = async () => {
+        setIsToggling(true);
+        localStorage.removeItem('notifications_disabled');
+        await storeNotificationPreference(true);
+        const permissionGranted = await requestNotificationPermission();
+        if (permissionGranted) {
+            const token = await getFCMToken();
+            if (token) {
+                await apiNotifications.registerToken(token);
+            }
+        }
+        setNotificationStatus(prevStatus => ({
+            ...prevStatus,
+            arePopupsEnabled: true,
+            permission: permissionGranted ? 'granted' : 'denied'
+        }));
+        window.dispatchEvent(new CustomEvent('notification-setting-change'));
+        localStorage.getItem('notifications_disabled');
+        setIsToggling(false);
+    };
+
+    const handleHideNotifications = async () => {
+        setIsToggling(true);
+        localStorage.setItem('notifications_disabled', 'true');
+        await storeNotificationPreference(false);
+        setNotificationStatus(prevStatus => ({
+            ...prevStatus,
+            arePopupsEnabled: false
+        }));
+        window.dispatchEvent(new CustomEvent('notification-setting-change'));
+        localStorage.getItem('notifications_disabled');
+        setIsToggling(false);
+    };
 
     const normalizeApiNotification = (apiNotif) => ({
         id: apiNotif.id,
@@ -44,7 +113,7 @@ const NotificationsPage = () => {
                 const store = tx.objectStore(STORE_NAME);
 
                 for (const apiNotif of normalizedApiData) {
-                    await new Promise((resolve, reject) => {
+                    await new Promise((resolve) => {
                         const request = store.put(apiNotif);
                         request.onsuccess = () => resolve();
                     });
@@ -53,10 +122,11 @@ const NotificationsPage = () => {
                 const updatedLocalData = await getAllStoredNotifications();
                 updatedLocalData.sort((a, b) => b.timestamp - a.timestamp);
                 setNotificationsList(updatedLocalData);
-                setIsSyncing(false);
             }
+            setIsSyncing(false);
+            setIsLoadingLocal(false);
         }
-    }, [isOnline]);
+    }, []);
 
     useEffect(() => {
         fetchNotifications();
@@ -164,6 +234,17 @@ const NotificationsPage = () => {
                     <div className="notifications-header">
                         <h1>Notifications</h1>
                         <div className="header-actions">
+                            <div className="notification-controls">
+                                <button
+                                    className={`notification-toggle-btn ${notificationStatus.arePopupsEnabled ? 'enabled' : 'disabled'}`}
+                                    onClick={notificationStatus.arePopupsEnabled ? handleHideNotifications : handleShowNotifications}
+                                    disabled={isToggling}
+                                    title={notificationStatus.arePopupsEnabled ? 'Disable notification popups' : 'Enable notification popups'}
+                                >
+                                    <FontAwesomeIcon icon={notificationStatus.arePopupsEnabled ? faBell : faBellSlash} />
+                                    <span>{isToggling ? 'Processing...' : (notificationStatus.arePopupsEnabled ? 'Disable notifications' : 'Enable notifications')}</span>
+                                </button>
+                            </div>
                             {isReadyToDisplay && filteredNotifications.some(n => !n.read) && (
                                 <button className="mark-all-read-btn" onClick={handleMarkAllAsReadAndSync}>Mark all as read</button>
                             )}
