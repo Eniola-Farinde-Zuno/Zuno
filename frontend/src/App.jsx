@@ -7,7 +7,8 @@ import TaskList from './components/TaskList';
 import NotificationsPage from './notifications/NotificationsPage';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Notification from './notifications/Notification';
-import { registerServiceWorker, foregroundMessageHandler, getFCMToken } from './notifications/notificationService';
+import Dashboard from './components/Dashboard/Dashboard';
+import { requestNotificationPermission, registerServiceWorker, foregroundMessageHandler, getFCMToken } from './notifications/notificationService';
 import { addNotification, processOfflineOperations } from './notifications/indexedDB';
 import * as api from './utils/api';
 
@@ -123,6 +124,7 @@ function App() {
           <Route element={<PrivateRouter isLoggedIn={isLoggedIn} />}>
             <Route path="/sidebar" element={<Sidebar />} />
             <Route path="/pomodoro" element={<Pomodoro />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/tasklist" element={<TaskList setIsLoggedIn={setIsLoggedIn} />} />
             <Route path="/notifications" element={<NotificationsPage />} />
           </Route>

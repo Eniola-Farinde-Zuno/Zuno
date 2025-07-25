@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, Navigate} from "react-router-dom";
 import logo from "../assets/zuno-sidebar-logo.png";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faTimes, faHouse, faClockRotateLeft, faArrowRightFromBracket, faBell } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faTimes, faHouse, faClockRotateLeft, faArrowRightFromBracket, faBell, faList } from "@fortawesome/free-solid-svg-icons";
 import "./Sidebar.css";
 
 const Sidebar = () => {
@@ -40,8 +40,13 @@ const Sidebar = () => {
                         <div className="sidebar-nav">
                             <ul>
                                 <li>
-                                    <Link to="/tasklist" className="sidebar-nav-item" onClick={closeSidebar}>
+                                    <Link to="/dashboard" className="sidebar-nav-item" onClick={closeSidebar}>
                                         <h1><FontAwesomeIcon icon={faHouse} /> Home</h1>
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/tasklist" className="sidebar-nav-item" onClick={closeSidebar}>
+                                        <h1><FontAwesomeIcon icon={faList} /> Tasks</h1>
                                     </Link>
                                 </li>
                                 <li>
@@ -68,8 +73,13 @@ const Sidebar = () => {
                     <div className="sidebar-minimized-content">
                         <ul>
                             <li>
-                                <Link to="/tasklist" className="sidebar-nav-item" onClick={closeSidebar}>
+                                <Link to="/dashboard" className="sidebar-nav-item" onClick={closeSidebar}>
                                     <FontAwesomeIcon icon={faHouse} />
+                                </Link>
+                            </li>
+                            <li>
+                                <Link to="/tasklist" className="sidebar-nav-item" onClick={closeSidebar}>
+                                    <FontAwesomeIcon icon={faList} />
                                 </Link>
                             </li>
                             <li>
