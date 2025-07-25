@@ -17,4 +17,6 @@ router.post('/task/:taskId/complete', authenticateToken, taskController.complete
 
 router.post('/task/:taskId/undo-complete', authenticateToken, taskController.undoCompleteTask);
 
+router.get('/task/overdue', authenticateToken, taskController.getOverdueTasks);
+
 module.exports = router
