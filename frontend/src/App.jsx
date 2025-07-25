@@ -30,13 +30,10 @@ function App() {
     }
     const initializeNotifications = async () => {
       await registerServiceWorker();
-      if (isLoggedIn) {
-        const permissionStatus = await requestNotificationPermission();
-        if (permissionStatus) {
-          const fcmToken = await getFCMToken();
-          if (fcmToken) {
-            await api.notifications.registerToken(fcmToken);
-          }
+      if (isLoggedIn && Notification.permission === 'granted') {
+        const fcmToken = await getFCMToken();
+        if (fcmToken) {
+          await api.notifications.registerToken(fcmToken);
         }
       }
     };

@@ -51,12 +51,12 @@ const NotificationsPage = () => {
         return true;
     };
 
-    const handleShowNotifications = async () => {
+    const handleRequestPermission = async () => {
         setIsToggling(true);
-        localStorage.removeItem('notifications_disabled');
-        await storeNotificationPreference(true);
         const permissionGranted = await requestNotificationPermission();
         if (permissionGranted) {
+            localStorage.removeItem('notifications_disabled');
+            await storeNotificationPreference(true);
             const token = await getFCMToken();
             if (token) {
                 await apiNotifications.registerToken(token);
@@ -64,11 +64,28 @@ const NotificationsPage = () => {
         }
         setNotificationStatus(prevStatus => ({
             ...prevStatus,
-            arePopupsEnabled: true,
+            arePopupsEnabled: permissionGranted,
             permission: permissionGranted ? 'granted' : 'denied'
         }));
         window.dispatchEvent(new CustomEvent('notification-setting-change'));
-        localStorage.getItem('notifications_disabled');
+        setIsToggling(false);
+    };
+
+    const handleShowNotifications = async () => {
+        setIsToggling(true);
+        localStorage.removeItem('notifications_disabled');
+        await storeNotificationPreference(true);
+        if (notificationStatus.permission === 'granted') {
+            const token = await getFCMToken();
+            if (token) {
+                await apiNotifications.registerToken(token);
+            }
+        }
+        setNotificationStatus(prevStatus => ({
+            ...prevStatus,
+            arePopupsEnabled: true
+        }));
+        window.dispatchEvent(new CustomEvent('notification-setting-change'));
         setIsToggling(false);
     };
 
@@ -81,7 +98,6 @@ const NotificationsPage = () => {
             arePopupsEnabled: false
         }));
         window.dispatchEvent(new CustomEvent('notification-setting-change'));
-        localStorage.getItem('notifications_disabled');
         setIsToggling(false);
     };
 
@@ -103,34 +119,39 @@ const NotificationsPage = () => {
         localData.sort((a, b) => b.timestamp - a.timestamp);
         setNotificationsList(localData);
         setIsLoadingLocal(false);
-        if (navigator.onLine) { //if online, sync with API
+        if (navigator.onLine) {
             setIsSyncing(true);
-            const apiData = await apiNotifications.getAll();
-            if (apiData && apiData.length > 0) {
-                const normalizedApiData = apiData.map(normalizeApiNotification);
-                const db = await openIndexedDBClient();
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
+            try {
+                const apiData = await apiNotifications.getAll();
+                if (apiData && apiData.length > 0) {
+                    const normalizedApiData = apiData.map(normalizeApiNotification);
+                    const db = await openIndexedDBClient();
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
 
-                for (const apiNotif of normalizedApiData) {
-                    await new Promise((resolve) => {
-                        const request = store.put(apiNotif);
-                        request.onsuccess = () => resolve();
-                    });
+                    for (const apiNotif of normalizedApiData) {
+                        await new Promise((resolve) => {
+                            const request = store.put(apiNotif);
+                            request.onsuccess = () => resolve();
+                        });
+                    }
+                    await tx.done;
+                    const updatedLocalData = await getAllStoredNotifications();
+                    updatedLocalData.sort((a, b) => b.timestamp - a.timestamp);
+                    setNotificationsList(updatedLocalData);
                 }
-                await tx.done;
-                const updatedLocalData = await getAllStoredNotifications();
-                updatedLocalData.sort((a, b) => b.timestamp - a.timestamp);
-                setNotificationsList(updatedLocalData);
+            } catch (err) {
+                setError("Failed to load online notifications. Displaying cached data.");
+            } finally {
+                setIsSyncing(false);
+                setIsLoadingLocal(false);
             }
-            setIsSyncing(false);
-            setIsLoadingLocal(false);
         }
     }, []);
 
     useEffect(() => {
         fetchNotifications();
-        const handleServiceWorkerMessage = (event) => { //listen for service worker messages
+        const handleServiceWorkerMessage = (event) => {
             if (event.data && event.data.type === 'NEW_NOTIFICATION_RECEIVED') {
                 fetchNotifications();
             }
@@ -234,7 +255,20 @@ const NotificationsPage = () => {
                     <div className="notifications-header">
                         <h1>Notifications</h1>
                         <div className="header-actions">
-                            <div className="notification-controls">
+                            {notificationStatus.permission !== 'granted' || !notificationStatus.arePopupsEnabled ? (
+                                <button
+                                    className="notification-toggle-btn enable-notifications"
+                                    onClick={handleRequestPermission}
+                                    disabled={isToggling || notificationStatus.permission === 'denied'}
+                                    title={notificationStatus.permission === 'denied' ? 'Notifications are blocked' : 'Enable notification popups'}
+                                >
+                                    <FontAwesomeIcon icon={faBell} />
+                                    <span>
+                                        {isToggling ? 'Processing...' :
+                                            (notificationStatus.permission === 'denied' ? 'Permission Denied' : 'Enable Notifications')}
+                                    </span>
+                                </button>
+                            ) : (
                                 <button
                                     className={`notification-toggle-btn ${notificationStatus.arePopupsEnabled ? 'enabled' : 'disabled'}`}
                                     onClick={notificationStatus.arePopupsEnabled ? handleHideNotifications : handleShowNotifications}
@@ -244,7 +278,13 @@ const NotificationsPage = () => {
                                     <FontAwesomeIcon icon={notificationStatus.arePopupsEnabled ? faBell : faBellSlash} />
                                     <span>{isToggling ? 'Processing...' : (notificationStatus.arePopupsEnabled ? 'Disable notifications' : 'Enable notifications')}</span>
                                 </button>
-                            </div>
+                            )}
+                            {notificationStatus.permission === 'denied' && (
+                                <div className="permission-denied-message" title="Please allow notifications.">
+                                    Notifications blocked
+                                </div>
+                            )}
+
                             {isReadyToDisplay && filteredNotifications.some(n => !n.read) && (
                                 <button className="mark-all-read-btn" onClick={handleMarkAllAsReadAndSync}>Mark all as read</button>
                             )}
