@@ -230,6 +230,26 @@ const undoCompleteTask = async (req, res) => {
     invalidateUserCache(userId);
     return res.status(200).json({ task: updatedTask });
 };
+const getOverdueTasks = async (req, res) => {
+    const userId = req.user.id;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const overdueTasks = await prisma.task.findMany({
+        where: {
+            userId: userId,
+            status: {
+                not: COMPLETED
+            },
+            deadline: {
+                lt: today
+            }
+        }
+    });
+    return res.status(200).json({
+        count: overdueTasks.length,
+        tasks: overdueTasks
+    });
+};
 
 module.exports = {
     getSortedTasks,
@@ -238,4 +258,5 @@ module.exports = {
     deleteTask,
     completeTask,
     undoCompleteTask,
+    getOverdueTasks,
 };
