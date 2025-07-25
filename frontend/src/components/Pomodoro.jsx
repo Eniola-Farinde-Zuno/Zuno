@@ -15,30 +15,51 @@ const Pomodoro = () => {
     const SECS_IN_MIN = 60;
     const TEXT_COLOR = '#000000';
     const {greeting, firstName} = utils();
-    const [focusTime, setFocusTime] = useState(() => {
-        const savedTime = localStorage.getItem('focusTime');
-        return savedTime ? parseInt(savedTime, 10) : 25 * SECS_IN_MIN;
-    });
-    const [breakTime, setBreakTime] = useState(() => {
-        const savedTime = localStorage.getItem('breakTime');
-        return savedTime ? parseInt(savedTime, 10) : 5 * SECS_IN_MIN;
-    });
-    const [isTimer, setIsTimer] = useState(() => {
-        const savedFocus = localStorage.getItem('isFocus');
-        const savedBreak = localStorage.getItem('isBreak');
-        return savedFocus === 'true' || savedBreak === 'true';
-    });
-    const [mode, setMode] = useState(() => {
-        const savedMode = localStorage.getItem('mode');
-        return savedMode || 'focus';
-    });
-    const [cycles, setCycles] = useState(() => {
-        const savedCycles = localStorage.getItem('cycles');
-        return savedCycles ? parseInt(savedCycles, 10) : 0;
-    });
+    const [focusTime, setFocusTime] = useState(25 * SECS_IN_MIN);
+    const [breakTime, setBreakTime] = useState(5 * SECS_IN_MIN);
+    const [isTimer, setIsTimer] = useState(false);
+    const [mode, setMode] = useState('focus');
+    const [cycles, setCycles] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const LOADING_TIME = 500;
     const interval = useRef(null);
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user.id;
+
+    useEffect(() => {
+        const load = async () => {
+            setIsLoading(true);
+            await Promise.all([
+                new Promise(resolve => {
+                    const savedFocusTime = localStorage.getItem('focusTime');
+                    if (savedFocusTime) {
+                        setFocusTime(parseInt(savedFocusTime, 10));
+                    }
+                    const savedBreakTime = localStorage.getItem('breakTime');
+                    if (savedBreakTime) {
+                        setBreakTime(parseInt(savedBreakTime, 10));
+                    }
+                    const savedIsFocus = localStorage.getItem('isFocus');
+                    const savedIsBreak = localStorage.getItem('isBreak');
+                    setIsTimer(savedIsFocus === 'true' || savedIsBreak === 'true');
+
+                    const savedMode = localStorage.getItem('mode');
+                    if (savedMode) {
+                        setMode(savedMode);
+                    }
+                    const savedCycles = localStorage.getItem('cycles');
+                    if (savedCycles) {
+                        setCycles(parseInt(savedCycles, 10));
+                    }
+                    resolve();
+                }),
+                new Promise(resolve => setTimeout(resolve, LOADING_TIME))
+            ]);
+            setIsLoading(false);
+        };
+
+        load();
+    }, [LOADING_TIME]);
 
     useEffect(() => { localStorage.setItem('focusTime', focusTime.toString()); }, [focusTime]);
     useEffect(() => { localStorage.setItem('breakTime', breakTime.toString()); }, [breakTime]);
@@ -158,6 +179,17 @@ const Pomodoro = () => {
         } else {
             setBreakTime(breakTime - 5 * SECS_IN_MIN);
         }
+    }
+    if (isLoading) {
+        return (
+            <div className="pomodoro-page">
+                <Sidebar />
+                <div className="loading-state">
+                    <div className="loading-spinner"></div>
+                    <p>Loading Pomodoro...</p>
+                </div>
+            </div>
+        );
     }
 
     return (

@@ -21,6 +21,7 @@ const NotificationsPage = () => {
     });
     const [isToggling, setIsToggling] = useState(false);
     const STORE_NAME = 'received-notifications';
+    const LOADING_TIME = 500;
     useEffect(() => {
         const checkPermissionStatus = async () => {
             const status = await checkNotificationStatus();
@@ -99,10 +100,12 @@ const NotificationsPage = () => {
     const fetchNotifications = useCallback(async () => {
         setIsLoadingLocal(true);
         setError(null);
-        const localData = await getAllStoredNotifications();
-        localData.sort((a, b) => b.timestamp - a.timestamp);
-        setNotificationsList(localData);
-        setIsLoadingLocal(false);
+        const [localDataInitial] = await Promise.all([
+            getAllStoredNotifications(),
+            new Promise(resolve => setTimeout(resolve, LOADING_TIME)) // Minimum delay
+        ]);
+        localDataInitial.sort((a, b) => b.timestamp - a.timestamp);
+        setNotificationsList(localDataInitial);
         if (navigator.onLine) { //if online, sync with API
             setIsSyncing(true);
             const apiData = await apiNotifications.getAll();
@@ -126,7 +129,7 @@ const NotificationsPage = () => {
             setIsSyncing(false);
             setIsLoadingLocal(false);
         }
-    }, []);
+    }, [LOADING_TIME]);
 
     useEffect(() => {
         fetchNotifications();
@@ -224,6 +227,7 @@ const NotificationsPage = () => {
         return true;
     });
 
+    // Determine if the display is ready (not loading OR already has content)
     const isReadyToDisplay = !isLoadingLocal || filteredNotifications.length > 0;
 
     return (

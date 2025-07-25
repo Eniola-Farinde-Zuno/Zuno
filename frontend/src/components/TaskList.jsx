@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import utils from "../utils/utils";
 import { task } from "../utils/api";
 import Modal from "./Modal";
-import {TaskTree} from "./TaskTree";
+import { TaskTree } from "./TaskTree";
 
 const TaskList = () => {
     const { greeting, firstName } = utils();
@@ -17,10 +17,14 @@ const TaskList = () => {
     const [isLoading, setIsLoading] = useState(true);
     const IN_PROGRESS = "IN_PROGRESS";
     const COMPLETED = "COMPLETED";
+    const LOADING_TIME = 500;
 
     const fetchTasks = async () => {
         setIsLoading(true);
-        const data = await task.all();
+        const [data] = await Promise.all([
+            task.all(),
+            new Promise(resolve => setTimeout(resolve, LOADING_TIME))
+        ]);
         setTasks(data.sort((a, b) => b.priorityScore - a.priorityScore));
         setIsLoading(false);
     };
@@ -45,13 +49,13 @@ const TaskList = () => {
     const openModal = () => {
         setIsModalOpen(true);
         setEdit(false);
-        setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: ""});
+        setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: "" });
         setDependencies([]);
     };
     const closeModal = () => {
         setIsModalOpen(false);
         setEdit(false);
-        setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: ""});
+        setNewTask({ title: "", description: "", deadline: "", priority: "", status: "", size: "" });
         setDependencies([]);
     };
     const addTask = async (e) => {
@@ -103,7 +107,7 @@ const TaskList = () => {
         await fetchTasks();
     };
     const filteredTasks = tasks.filter(task => showCompleted ? task.status === COMPLETED : task.status !== COMPLETED);
-const toggleCheckbox = async (checkedTask) => {
+    const toggleCheckbox = async (checkedTask) => {
         if (checkedTask.status !== COMPLETED) {
             await task.complete(checkedTask.id);
         } else {
