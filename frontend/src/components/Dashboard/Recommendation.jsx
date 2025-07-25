@@ -91,7 +91,6 @@ const Recommendation = ({ onRecommendationFetched, setRecommendationErrorProp, r
                 setTimeLeft(0);
             }
         } catch (error) {
-            console.error('Error fetching study recommendation:', error);
             setRecommendationErrorProp(error.message);
             setStudyRecommendation(null);
             clearInterval(countdownIntervalRef.current);
