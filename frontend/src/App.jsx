@@ -7,7 +7,7 @@ import TaskList from './components/TaskList';
 import NotificationsPage from './notifications/NotificationsPage';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Notification from './notifications/Notification';
-import { requestNotificationPermission, registerServiceWorker, foregroundMessageHandler, getFCMToken } from './notifications/notificationService';
+import { registerServiceWorker, foregroundMessageHandler, getFCMToken } from './notifications/notificationService';
 import { addNotification, processOfflineOperations } from './notifications/indexedDB';
 import * as api from './utils/api';
 
@@ -29,13 +29,10 @@ function App() {
     }
     const initializeNotifications = async () => {
       await registerServiceWorker();
-      if (isLoggedIn) {
-        const permissionStatus = await requestNotificationPermission();
-        if (permissionStatus) {
-          const fcmToken = await getFCMToken();
-          if (fcmToken) {
-            await api.notifications.registerToken(fcmToken);
-          }
+      if (isLoggedIn && Notification.permission === 'granted') {
+        const fcmToken = await getFCMToken();
+        if (fcmToken) {
+          await api.notifications.registerToken(fcmToken);
         }
       }
     };

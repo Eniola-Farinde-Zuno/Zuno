@@ -38,16 +38,14 @@ export const getFCMToken = async () => {
 
 export const requestNotificationPermission = async () => {
   const permission = await Notification.requestPermission();
-  if (permission === 'granted') {
-    await getFCMToken();
-  }
+  return permission === 'granted';
 }
 
 export const foregroundMessageHandler = (callback) => {
   return onMessage(messaging, (payload) => {
     const notificationTitle = payload.notification?.title || payload.data?.title || 'New Notification';
     const notificationBody = payload.notification?.body || payload.data?.body || '';
-    const DEFAULT_NOTIFICATION_ICON = '../zuno-icon.jpg';
+    const DEFAULT_NOTIFICATION_ICON = '/zuno-icon.jpg';
 
     const notificationOptions = {
       body: notificationBody,
@@ -64,7 +62,9 @@ export const foregroundMessageHandler = (callback) => {
     if (callback && typeof callback === 'function') {
       callback(payload);
     } else {
-      new Notification(notificationTitle, notificationOptions);
+      if (Notification.permission === 'granted' && localStorage.getItem('notifications_disabled') !== 'true') {
+        new Notification(notificationTitle, notificationOptions);
+      }
     }
   });
 }
