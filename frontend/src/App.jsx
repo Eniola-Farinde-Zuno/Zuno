@@ -50,7 +50,7 @@ function App() {
       unsubscribeOnMessage = foregroundMessageHandler((payload) => {
         //create notification object
         const notification = {
-          id: Date.now(),
+          id: payload.data?.id || Date.now(),
           title: payload.notification?.title || 'New Notification',
           body: payload.notification?.body || '',
           data: payload.data || {},
@@ -62,6 +62,15 @@ function App() {
         if ('indexedDB' in window) {
           addNotification(notification)
         }
+      });
+    };
+    const handleNewLocalNotification = (event) => {
+      const notificationData = event.detail;
+      setNotificationsList(prev => {
+        if (!prev.some(n => n.id === notificationData.id)) {
+          return [notificationData, ...prev];
+        }
+        return prev;
       });
     };
     const handleOnline = () => {
@@ -85,7 +94,7 @@ function App() {
     //add online/offline event listeners
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
+    window.addEventListener('new-notification', handleNewLocalNotification);
     navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
 
     //initialize notifications and process any pending offline operations
@@ -111,9 +120,10 @@ function App() {
       navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('new-notification', handleNewLocalNotification);
       clearTimeout(urlCheckTimeout);
     };
-  }, []);
+  }, [isLoggedIn]);
 
   return (
     <>
