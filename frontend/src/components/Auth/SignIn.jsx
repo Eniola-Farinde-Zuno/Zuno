@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from '../assets/zuno-logo.png';
 import '../components/SignUp.css';
-import { auth, task } from "../utils/api"
+import { auth, task } from "../../utils/api"
 
 const SignIn = ({setIsLoggedIn}) => {
     const [form, setForm] = useState({});
@@ -47,7 +47,7 @@ const SignIn = ({setIsLoggedIn}) => {
                         read: false
                     };
                     if ('indexedDB' in window) {
-                        const { addNotification } = await import('../notifications/indexedDB');
+                        const { addNotification } = await import('../../notifications/indexedDB');
                         await addNotification(notificationData);
                     }
                     window.dispatchEvent(new CustomEvent('new-notification', {

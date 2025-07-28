@@ -1,14 +1,14 @@
 import React, {useState, useEffect, useRef} from 'react';
 import './Pomodoro.css';
-import Sidebar from './Sidebar';
+import Sidebar from '../Sidebar/Sidebar';
 import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import { faPause } from '@fortawesome/free-solid-svg-icons';
-import utils from '../utils/utils';
-import { focusCompletion, breakCompletion, pomodoroAction} from '../utils/notificationUtils';
-import { pomodoro } from '../utils/api';
+import utils from '../../utils/utils';
+import { focusCompletion, breakCompletion, pomodoroAction} from '../../utils/notificationUtils';
+import { pomodoro } from '../../utils/api';
 
 
 const Pomodoro = () => {

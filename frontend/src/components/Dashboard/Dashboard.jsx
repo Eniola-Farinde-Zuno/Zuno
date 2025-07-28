@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import { task, classes } from '../../utils/api';
-import Sidebar from '../Sidebar';
+import Sidebar from '../Sidebar/Sidebar';
 import utils from '../../utils/utils';
 import Recommendation from './Recommendation';
 import TaskOverviewSection from './TaskOverview';

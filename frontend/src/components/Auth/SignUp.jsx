@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import logo from '../assets/zuno-logo.png';
 import '../components/SignUp.css'
 import { Link, useNavigate } from "react-router-dom";
-import { auth } from "../utils/api"
+import { auth } from "../../utils/api"
 
 const SignUp = () => {
     const [form , setForm] = useState({ firstName: '', lastName: '', email: '', password: ''});

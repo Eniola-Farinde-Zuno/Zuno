@@ -1,9 +1,9 @@
 import { React, useEffect, useState } from "react";
 import "./TaskList.css";
-import Sidebar from "./Sidebar";
-import utils from "../utils/utils";
-import { task } from "../utils/api";
-import Modal from "./Modal";
+import Sidebar from "../Sidebar/Sidebar";
+import utils from "../../utils/utils";
+import { task } from "../../utils/api";
+import Modal from "../Modal/Modal";
 import { TaskTree } from "./TaskTree";
 
 const TaskList = () => {

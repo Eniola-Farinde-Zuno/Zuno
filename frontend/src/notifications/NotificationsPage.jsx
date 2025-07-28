@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/Sidebar/Sidebar';
 import { notifications as apiNotifications } from '../utils/api';
 import './NotificationsPage.css';
 import { formatDistanceToNow } from 'date-fns';

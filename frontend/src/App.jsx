@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import SignUp from './components/SignUp';
-import SignIn from './components/SignIn';
-import Pomodoro from './components/Pomodoro';
-import Sidebar from './components/Sidebar';
-import TaskList from './components/TaskList';
+import SignUp from './components/Auth/SignUp';
+import SignIn from './components/Auth/SignIn';
+import Pomodoro from './components/Pomodoro/Pomodoro';
+import Sidebar from './components/Sidebar/Sidebar';
+import TaskList from './components/Tasklist/TaskList';
 import NotificationsPage from './notifications/NotificationsPage';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Notification from './notifications/Notification';
