@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from '../assets/zuno-logo.png';
-import '../components/SignUp.css';
+import logo from '../../assets/zuno-logo.png';
+import './SignUp.css';
 import { auth, task } from "../../utils/api"
 
 const SignIn = ({setIsLoggedIn}) => {

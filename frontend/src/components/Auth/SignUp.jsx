@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import logo from '../assets/zuno-logo.png';
-import '../components/SignUp.css'
+import logo from '../../assets/zuno-logo.png';
+import './SignUp.css'
 import { Link, useNavigate } from "react-router-dom";
 import { auth } from "../../utils/api"
 

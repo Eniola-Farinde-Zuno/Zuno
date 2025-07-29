@@ -7,8 +7,10 @@ import utils from '../../utils/utils';
 import Recommendation from './Recommendation';
 import TaskOverviewSection from './TaskOverview';
 import ClassScheduleSection from './ClassSchedule';
+import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-const Dashboard = () => {
+const Dashboard = ({ theme, toggleTheme }) => {
     const navigate = useNavigate();
     const [tasksDue, setTasksDue] = useState([]);
     const [overdueTasks, setOverdueTasks] = useState([]);
@@ -93,6 +95,9 @@ const Dashboard = () => {
                     <header className="dashboard-header">
                         <h1> {greeting} {firstName}</h1>
                         <p>Here's what's happening with your tasks and classes today.</p>
+                        <button className="theme-toggle" onClick={toggleTheme}>
+                            {theme === 'light' ? <FontAwesomeIcon icon={faMoon} /> : <FontAwesomeIcon icon={faSun} />}
+                        </button>
                     </header>
                     <div className="dashboard-grid">
                         <ClassScheduleSection

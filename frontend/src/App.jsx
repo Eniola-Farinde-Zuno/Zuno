@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import SignUp from './components/Auth/SignUp';
 import SignIn from './components/Auth/SignIn';
 import Pomodoro from './components/Pomodoro/Pomodoro';
@@ -23,6 +23,16 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("token") ? true : false);
   const [notificationsList, setNotificationsList] = useState([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    document.body.className = theme;
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  });
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -134,7 +144,7 @@ function App() {
           <Route element={<PrivateRouter isLoggedIn={isLoggedIn} />}>
             <Route path="/sidebar" element={<Sidebar />} />
             <Route path="/pomodoro" element={<Pomodoro />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard theme={theme} toggleTheme={toggleTheme} />} />
             <Route path="/tasklist" element={<TaskList setIsLoggedIn={setIsLoggedIn} />} />
             <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
