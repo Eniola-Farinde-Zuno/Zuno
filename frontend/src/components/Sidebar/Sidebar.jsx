@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, Navigate} from "react-router-dom";
-import logo from "../assets/zuno-sidebar-logo.png";
+import logo from "../../assets/zuno-sidebar-logo.png";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faTimes, faHouse, faClockRotateLeft, faArrowRightFromBracket, faBell, faList } from "@fortawesome/free-solid-svg-icons";
 import "./Sidebar.css";
