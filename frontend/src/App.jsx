@@ -10,6 +10,7 @@ import Notification from './notifications/Notification';
 import Dashboard from './components/Dashboard/Dashboard';
 import { requestNotificationPermission, registerServiceWorker, foregroundMessageHandler, getFCMToken } from './notifications/notificationService';
 import { addNotification, processOfflineOperations } from './notifications/indexedDB';
+import LandingPage from './components/LandingPage/LandingPage';
 import * as api from './utils/api';
 
 const PrivateRouter = ({ isLoggedIn }) => {
@@ -139,7 +140,8 @@ function App() {
     <>
       <Router>
         <Routes>
-          <Route path="/" element={<SignUp />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn setIsLoggedIn={setIsLoggedIn} />} />
           <Route element={<PrivateRouter isLoggedIn={isLoggedIn} />}>
             <Route path="/sidebar" element={<Sidebar />} />
