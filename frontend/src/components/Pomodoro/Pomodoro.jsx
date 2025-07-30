@@ -13,7 +13,7 @@ import { pomodoro } from '../../utils/api';
 
 const Pomodoro = () => {
     const SECS_IN_MIN = 60;
-    const TEXT_COLOR = '#000000';
+    const TEXT_COLOR = 'var(--text-color)';
     const {greeting, firstName} = utils();
     const [focusTime, setFocusTime] = useState(25 * SECS_IN_MIN);
     const [breakTime, setBreakTime] = useState(5 * SECS_IN_MIN);
@@ -202,7 +202,7 @@ const Pomodoro = () => {
             <div className='pomodoro-content'>
                 <div className='focus-timer'>
                     <h1>Focus</h1>
-                    <h2><CircularProgressbar value={focusTime} text={formatTime(focusTime)} maxValue={1500} strokeWidth={2} styles={buildStyles({
+                    <h2><CircularProgressbar value={focusTime} text={formatTime(focusTime)} maxValue={1500} strokeWidth={4} styles={buildStyles({
                         textColor: TEXT_COLOR, pathColor: TEXT_COLOR,
                     })}/></h2>
                     <div className='focus-btns'>
@@ -219,7 +219,7 @@ const Pomodoro = () => {
                 </div>
                 <div className='break-timer'>
                     <h1>Break</h1>
-                    <h2><CircularProgressbar value={breakTime} text={formatTime(breakTime)} maxValue={300} strokeWidth={2} styles={buildStyles({
+                    <h2><CircularProgressbar value={breakTime} text={formatTime(breakTime)} maxValue={300} strokeWidth={4} styles={buildStyles({
                         textColor: TEXT_COLOR, pathColor: TEXT_COLOR,
                     })}/></h2>
                     <div className='break-btns'>

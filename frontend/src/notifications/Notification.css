@@ -11,6 +11,10 @@
   transition: opacity 0.3s, transform 0.3s;
 }
 
+.dark .notification {
+  background-color: #999;
+}
+
 .notification.visible {
   opacity: 1;
   transform: translateY(0);
@@ -31,19 +35,22 @@
 .notification-header h3 {
   margin: 0;
   font-size: 16px;
+  color: var(--text-color);
 }
 
-.notification-header button {
+.notification-header button, .dark .notification-header button {
   background: none;
   border: none;
   font-size: 20px;
   cursor: pointer;
+  color: var(--text-color);
 }
 
 .notification-body p {
   margin: 0;
   font-size: 14px;
   margin-bottom: 8px;
+  color: var(--text-color);
 }
 
 .notification-actions {
