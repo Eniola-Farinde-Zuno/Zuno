@@ -18,7 +18,7 @@
     left: 0;
     width: 60px;
 }
-.sidebar-toggle-button {
+.sidebar-toggle-button, .dark .sidebar-toggle-button {
     position: absolute;
     top: 20px;
     right: -60px;

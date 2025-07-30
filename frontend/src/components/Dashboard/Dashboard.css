@@ -194,7 +194,7 @@
 }
 
 .modal-content {
-    background: #fff;
+    background: var(--background-color);
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -250,7 +250,7 @@
 .add-class-form select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 1em;
     box-sizing: border-box;
@@ -489,8 +489,8 @@
 }
 
 .priority-high {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: var(--high-priority-bg);
+    color: var(--high-priority);
 }
 
 .priority-medium {
@@ -542,13 +542,9 @@
     padding-right: 5px;
 }
 
-.theme-toggle {
+.theme-toggle, .dark .theme-toggle {
     background: none;
     color: var(--text-color);
     font-size: large;
     margin-left: 28rem;
-}
-
-.theme-toggle.dark {
-    background: none;
 }

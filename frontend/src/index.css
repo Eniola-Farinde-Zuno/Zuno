@@ -15,6 +15,9 @@
   --time-label: #eceff1;
   --empty-cell-color: #fff;
   --cell-color: #f0f5fd;
+  --completed-task-color: #555;
+  --high-priority: #721c24;
+  --high-priority-bg: #ef476f33;
   line-height: 1.5;
   font-weight: 400;
 }
@@ -30,6 +33,9 @@ body.dark {
   --border-color: #333;
   --class-border: #757678;
   --time-label: #313131;
+  --completed-task-color: #999;
+  --high-priority: #8e4950;
+  --high-priority-bg: #f8d7da;
 }
 
 body {
@@ -53,6 +59,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
   color: #fff;
+}
+
+body.dark button {
+  background-color: #fff;
+  color: #1a1a1a;
 }
 
 .loading-state {

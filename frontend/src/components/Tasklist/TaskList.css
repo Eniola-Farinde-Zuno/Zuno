@@ -8,7 +8,7 @@
 }
 .task-header h1 {
     font-size: 2em;
-    color: #000000;
+    color: var(--text-color);
     margin-bottom: 30px;
     font-weight: bold;
     text-align: center;
@@ -29,7 +29,7 @@
     padding: 10px 15px;
     margin-bottom: 10px;
     gap: 10px;
-    border-bottom: #ccc 1px solid;
+    border-bottom: var(--border-color) 1px solid;
     line-height: 1rem;
 }
 
@@ -37,7 +37,7 @@
     appearance: none;
     width: 15px;
     height: 15px;
-    border: 2px solid #000;
+    border: 2px solid var(--text-color);
     border-radius: 4px;
     cursor: pointer;
     position: relative;
@@ -46,13 +46,13 @@
 }
 .task-checkbox:checked {
     background-color: var(--background-color);
-    border-color: #000;
+    border-color: var(--text-color);
 }
 
 .task-checkbox:checked::before {
     content: '\2714';
     font-size: 12px;
-    color: #000;
+    color: var(--text-color);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -68,12 +68,12 @@
 
 .task-title {
     font-size: 1em;
-    color: #000;
+    color: var(--text-color);
 }
 
 .task-description {
     font-size: 0.88em;
-    color: #555;
+    color: var(--completed-task-color);
     margin-top: 2px;
     margin-bottom: 5px;
 }
@@ -83,7 +83,7 @@
     flex-wrap: wrap;
     gap: 10px;
     font-size: 0.6em;
-    color: #555;
+    color: var(--completed-task-color);
 }
 
 .task-detail {
@@ -97,7 +97,7 @@
 .completed-task .task-title,
 .completed-task .task-description {
     text-decoration: line-through;
-    color: #555;
+    color: var(--completed-task-color);
 }
 
 .completed-task .task-details {
@@ -114,10 +114,10 @@
     flex-shrink: 0;
 }
 
-.task-actions button {
+.task-actions button, .dark .task-actions button {
     background: none;
     border: none;
-    color: #000;
+    color: var(--text-color);
     cursor: pointer;
     font-size: 1.2em;
     padding: 5px;
@@ -154,14 +154,16 @@
     width: 100%;
     max-width: 1200px;
     padding: 10px 0;
+    border-bottom: var(--border-color) 1px solid;
 }
 
 .task-controls h1 {
     margin: 0;
+    color: var(--text-color);
 }
-.add-task {
+.add-task, .dark .add-task {
     background: none;
-    color: #000;
+    color: var(--text-color);
     align-items: left;
 }
 .add-task:hover{
@@ -242,41 +244,6 @@ button:disabled {
 .info-icon-container:hover .tooltip {
     visibility: visible;
     opacity: 1;
-}
-.task-detail.priority-high {
-    background-color: #ef476f33;
-}
-.task-detail.priority-medium {
-    background-color: #ffd16633;
-}
-.task-detail.priority-low {
-    background-color: #06d6a033;
-}
-
-.task-detail.status-completed {
-    background-color: #06d6a033;
-}
-.task-detail.status-in_progress {
-    background-color: #118ab233;
-}
-.task-detail.status-blocked {
-    background-color: #ef476f33;
-}
-.task-detail.status-none {
-    background-color: #adb5bd33;
-}
-
-.task-detail.size-extra-small {
-    background-color: #06d6a033;
-}
-.task-detail.size-small {
-    background-color: #118ab233;
-}
-.task-detail.size-medium {
-    background-color: #ffd16633;
-}
-.task-detail.size-large {
-    background-color: #ef476f33;
 }
 
 .overdue-badge {
